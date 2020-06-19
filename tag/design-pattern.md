@@ -1,5 +1,5 @@
 ---
 layout: tag
-title: "Tag: design-pattern"
 tag: design-pattern
+title:Tag design-pattern posts:
 ---
