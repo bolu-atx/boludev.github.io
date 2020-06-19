@@ -108,7 +108,8 @@ struct PoisonPotion {
    bool can_attack() const { return true; }
 };
 ```
-Note that even though these objects do not derive from a base, they do all implement the method `can_attack`. This looser-coupling can sometimes be bad - as you can imagine, when the code gets complicated, it might be difficult to figure out what needs to be implemented, or to tease out the hidden dependencies.
+
+Note that even though these classes are not derived from a common base, they do all implement the method `can_attack`. This looser-coupling can sometimes be bad - as you can imagine, when the code gets complicated, it might be difficult to figure out what needs to be implemented, or to tease out the hidden dependencies.
 
 To make these things all fit into a standard container, we then need to do a bit of type erasure magic, aka a `Object` wrapper.
 
@@ -146,7 +147,7 @@ class Object {
 };
 ```
 
-The `Object` wrapper holds a shared pointer to a `ObjectConcept`, which is just an abstract interface class that have templatized concrete derived classes for things that we want to model. `Object` class then implement a template constructor method to bind the shared pointer to a concrete instance of the `ObjectModel`.
+The `Object` wrapper holds a shared pointer to a `ObjectConcept`, which is just an abstract interface class that have templatized concrete derived classes for things that we want to model. `Object` class then implement a template constructor method to bind the shared pointer to a concrete instance of the `ObjectModel`
 
 To use this wrapper, one simply calls the Object templatized constructor as follows:
 
@@ -170,3 +171,11 @@ int main() {
 ```
 
 What if you did not implement the method `can_attack` for certain items? Well.. nothing, as long as it is not called in the code. If it is, then you will get a compiler error.
+
+## Thoughts
+
+- Containers with unknown types has a lot of overhead (and rightly so), if we can avoid it, definitely do
+- Custom type erasure implementation has a lot of overhead in both code complexity and performance. We should avoid them if possible.
+- I prefer to use classic polymorphism solution if it's possible (i.e. if we do not need to make copy of the objects later, or need to know the derived type) -even then, we can use some [other tricks](https://stackoverflow.com/questions/39138770/get-objects-type-from-pointer-to-base-class-at-runtime) to figure this out.
+- I would prefer `std::any` over any custom code for type erasure - there's just too many surfaces where things can go wrong
+- for Library developers, one aspect of type erasure might be attractive -- it decouples the concrete implementation from the interface and allows greater freedom, which might be attractive when you do not have access to the complete codebase and its related libraries.
