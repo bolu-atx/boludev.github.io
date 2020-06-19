@@ -145,6 +145,8 @@ class Object {
 };
 ```
 
+To use this wrapper, one simply calls the Object templatized constructor as follows:
+
 ```cpp
 int main() {
    typedef std::vector< Object >    Backpack;
