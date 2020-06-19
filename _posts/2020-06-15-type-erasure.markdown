@@ -2,7 +2,9 @@
 layout: post
 title:  "Type Erasure vs Polymorphism"
 date:   2020-06-15 15:06:06 -0700
-categories: cpp pattern
+tags: cpp design-pattern template
+author: bolu-atx
+categories: programming
 ---
 
 C++ templates are useful constructs to reduce code bloat (I think of them as fancy copy and paste) without any performance overhead at run-time.

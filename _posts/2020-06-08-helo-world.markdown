@@ -3,6 +3,7 @@ layout: post
 title:  "Hello World"
 date:   2020-06-08 15:06:06 -0700
 categories: general
+author: bolu-atx
 ---
 
 This is the obligatory "Hello World" post.
