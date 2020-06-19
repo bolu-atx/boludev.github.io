@@ -59,21 +59,23 @@ int main() {
 }
 ```
 
-If we are uncomfortable with raw pointers, we can wrap `IFoo` with shared pointers or unique pointers to automatically clean-up the resources when they go out of scope.
+If raw pointers are scary to you, we can wrap `IFoo` with shared pointers or unique pointers to automatically clean-up the resources when they go out of scope.
 
 ```cpp
 auto ptr = std::make_shared<IFoo>(new Foo<int>());
 ```
 
-Why is this "bad"? According to this [post](https://www.cplusplus.com/articles/oz18T05o/), the claim is that the derived type is lost, therefore, we can no longer make a copy of the object if we wanted to. 
+Why is this *bad*? According to this [post](https://www.cplusplus.com/articles/oz18T05o/), the claim is that the derived type is lost, therefore, we can no longer make a copy of the object if we wanted to. 
 
 In addiiton, all the functions now need to be virtual, incurring slightly extra lookups costs for performance sensitive applications. This will also make `IFoo` cluttered.
 
 ## Type Erasure
 
-In this [stack overflow post](https://stackoverflow.com/questions/4738405/how-can-i-store-objects-of-differing-types-in-a-c-container#4738459), `boost::any` was suggested. We can then store a bunch of them in any container we please ( `std::vector<boost::any>`)
+In this [stack overflow post](https://stackoverflow.com/questions/4738405/how-can-i-store-objects-of-differing-types-in-a-c-container#4738459), `boost::any` was suggested. Since C++17, we can also use `std::any` to achieve the same functionality. 
 
-Type erasure is a pattern that hides the template parameter using composition and template functions (instead of template classes).
+These variant type containers are essentially performing type erasure. Type erasure is a pattern that hides the template parameter using composition and template functions (instead of template classes).
+
+Here, we want to achieve similar functionality ourselves. This code snippet is origially from [here](https://www.cplusplus.com/articles/oz18T05o/).
 
 ```cpp
 struct Weapon {
@@ -104,8 +106,13 @@ struct Potion {
 struct PoisonPotion {
    bool can_attack() const { return true; }
 };
+```
 
+Note that these objects are not derived from a common base class, but they do need to have the same method signature. This looser-coupling is not really better/worse than inheritance. It's really up to the programmer. 
 
+The type erasure magic happens here - in this `Object` container.
+
+```cpp
 class Object {
    struct ObjectConcept {   
        virtual ~ObjectConcept() {}
@@ -136,11 +143,11 @@ class Object {
    bool has_attack_concept() const
       { return object->has_attack_concept(); }
 };
+```
 
+```cpp
 int main() {
    typedef std::vector< Object >    Backpack;
-   typedef Backpack::const_iterator BackpackIter;
-
    Backpack backpack;
 
    backpack.push_back( Object( Weapon( SWORD ) ) );
@@ -151,8 +158,10 @@ int main() {
    backpack.push_back( Object( PoisonPotion() ) );
 
    std::cout << "Items I can attack with:" << std::endl;
-   for( BackpackIter item = backpack.begin(); item != backpack.end(); ++item )
+   for( auto item& : backpack)
        if( item->has_attack_concept() )
            std::cout << item->name();
 }
 ```
+
+What if you did not implement the method `can_attack` for certain items? Well.. nothing, as long as it is not called in the code. If it is, then you will get a compiler error.
