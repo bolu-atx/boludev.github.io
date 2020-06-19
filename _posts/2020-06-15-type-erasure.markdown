@@ -77,6 +77,7 @@ These variant type containers are essentially performing type erasure. Type eras
 
 Here, we want to achieve similar functionality ourselves. This code snippet is origially from [here](https://www.cplusplus.com/articles/oz18T05o/).
 
+Suppose you have a bunch of objects that belong together - why do they not derive from the same base class? I have no idea, but bear with me.
 ```cpp
 struct Weapon {
    bool can_attack() const { return true; } // All weapons can do damage
@@ -107,13 +108,13 @@ struct PoisonPotion {
    bool can_attack() const { return true; }
 };
 ```
+Note that even though these objects do not derive from a base, they do all implement the method `can_attack`. This looser-coupling can sometimes be bad - as you can imagine, when the code gets complicated, it might be difficult to figure out what needs to be implemented, or to tease out the hidden dependencies.
 
-Note that these objects are not derived from a common base class, but they do need to have the same method signature. This looser-coupling is not really better/worse than inheritance. It's really up to the programmer. 
-
-The type erasure magic happens here - in this `Object` container.
+To make these things all fit into a standard container, we then need to do a bit of type erasure magic, aka a `Object` wrapper.
 
 ```cpp
 class Object {
+
    struct ObjectConcept {   
        virtual ~ObjectConcept() {}
        virtual bool has_attack_concept() const = 0;
@@ -131,7 +132,7 @@ class Object {
        T object;
    };
 
-   boost::shared_ptr<ObjectConcept> object;
+   std::shared_ptr<ObjectConcept> object;
 
   public:
    template< typename T > Object( const T& obj ) :
@@ -144,6 +145,8 @@ class Object {
       { return object->has_attack_concept(); }
 };
 ```
+
+The `Object` wrapper holds a shared pointer to a `ObjectConcept`, which is just an abstract interface class that have templatized concrete derived classes for things that we want to model. `Object` class then implement a template constructor method to bind the shared pointer to a concrete instance of the `ObjectModel`.
 
 To use this wrapper, one simply calls the Object templatized constructor as follows:
 
