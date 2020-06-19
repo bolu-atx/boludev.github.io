@@ -35,7 +35,7 @@ I also ran into conflicts of different versions of Ruby packages due to a prior 
 Getting MathJax to work with Jekyll was suprisingly easy, all I needed to do was to insert this snippet into my `head.html`
 
 ```html
-<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 ```
 After that, I can use LaTeX syntax as such: `$$ y = \int{a}{b}{x^2+3x+b} $$` gets rendered into:
 
