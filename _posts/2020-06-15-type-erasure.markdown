@@ -5,22 +5,19 @@ date:   2020-06-15 15:06:06 -0700
 categories: cpp pattern
 ---
 
-## The Problem
 C++ templates are useful constructs to reduce code bloat (I think of them as fancy copy and paste) without any performance overhead at run-time.
 However, to use them effectively might require some practice.
 One issue I recently ran into while working with templates is the following:
 
-Suppose I have a generic class `Foo<T>` that takes a template argument, I need to place `Foo<T>` in a container to extend its lifetime. 
-
-However, there are multiple instantiations of `Foo<T>` of different template argument types (i.e. `int, float, double, bool`). This is a non-trivial problem without resorting to external libraries.
+Suppose I have a generic class `Foo<T>` that takes a template argument, I need to place `Foo<T>` in a container to be iterated upon or to be looked up later.  However, I might have multiple instantiations of `Foo<T>` of different types (i.e. `int, float, double, bool`), this makes it hard to use STL containers since these containers require the elements to be of a single type.
 
 After scouring the internet, I found that cplusplus.com article here (https://www.cplusplus.com/articles/oz18T05o/) was really insightful. I decided to update this article for my own interpretation.
 
 ## Classic Inheritence Approach
 
-We can make the `Foo<T>` class a derived class of `IFoo`, a non-templated, abstract class, and then make all the methods of `Foo` virtual.
+The straight-forward answer is to use classic polymorphism. We make the `Foo<T>` class a derived class of `IFoo`, and then instantiate a bunch of different `Foo<T>` but bind them `IFoo*`. The `IFoo*` can then be stored in a container such as `std::vector<IFoo*>`:
 
-```
+```cpp
 class IFoo {
     public:
     virtual void bar() = 0;
@@ -37,15 +34,48 @@ public:
 private:
     T m_foo;
 }
+
+int main() {
+   std::vector<IFoo*> foos;
+   for (size_t i = 0; i < 10; ++i>)
+   {
+      if (i % 2 == 0)
+      {
+         IFoo* ptr = new Foo<int>();
+         foos.emplace_back(ptr);
+      }
+      else {
+         IFoo* ptr = new Foo<float>();
+         foos.emplace_back(ptr);
+      }
+   }
+
+   // call bar
+   for (auto ptr : foos)
+   {
+      ptr->bar();
+   }
+
+}
 ```
 
-Now, we can store a collection of `Foo<T>` in a container
+If we are uncomfortable with raw pointers, we can wrap `IFoo` with shared pointers or unique pointers to automatically clean-up the resources when they go out of scope.
+
+```cpp
+auto ptr = std::make_shared<IFoo>(new Foo<int>());
+```
+
+Why is this "bad"? According to this [post](https://www.cplusplus.com/articles/oz18T05o/), the claim is that the derived type is lost, therefore, we can no longer make a copy of the object if we wanted to. 
+
+In addiiton, all the functions now need to be virtual, incurring slightly extra lookups costs for performance sensitive applications. This will also make `IFoo` cluttered.
 
 ## Type Erasure
 
+In this [stack overflow post](https://stackoverflow.com/questions/4738405/how-can-i-store-objects-of-differing-types-in-a-c-container#4738459), `boost::any` was suggested. We can then store a bunch of them in any container we please ( `std::vector<boost::any>`)
+
 Type erasure is a pattern that hides the template parameter using composition and template functions (instead of template classes).
 
-```
+```cpp
 struct Weapon {
    bool can_attack() const { return true; } // All weapons can do damage
 };
