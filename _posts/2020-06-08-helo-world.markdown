@@ -5,12 +5,7 @@ date:   2020-06-08 15:06:06 -0700
 categories: general
 ---
 
-Decided to just switch to Jekyll and Github pages instead of hosting my own blog/portfolio site.
+After countless Wordpress, Vue, React attempts to host a blogging site, I've decided to just switch to Github pages (Jekyll). The setup was fairly painless:
 
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
-{% endhighlight %}
+- The official Github pages guide was very helpful https://pages.github.com/
+- To re-direct my custom domain (bolu.dev) to the Github pages, I followed Hossain Khan's guide here: https://medium.com/@hossainkhan/using-custom-domain-for-github-pages-86b303d3918a
