@@ -12,5 +12,9 @@
   <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   {% if site.tags != "" %}
   {% include collect-tags.html %}
-{% endif %}
+  {% endif %}
+
+  {% if jekyll.environment == 'production' %}
+  {% include analytics.html %}
+  {% endif %}
 </head>

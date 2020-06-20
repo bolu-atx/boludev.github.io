@@ -40,3 +40,9 @@ Getting MathJax to work with Jekyll was suprisingly easy, all I needed to do was
 After that, I can use LaTeX syntax as such: `$$ y = \int{a}{b}{x^2+3x+b} $$` gets rendered into:
 
 $$ y = \int{a}{b}{x^2+3x+b} $$
+
+
+### On other useful Jekyll goodies
+- [Automatic tag management](http://longqian.me/2017/02/09/github-jekyll-tag/) and archiving from Long Qian
+- [Automatic tag generator](https://www.untangled.dev/2020/06/02/tag-management-jekyll/) via Jekyll hooks
+- [Google analytics](https://michaelsoolee.com/google-analytics-jekyll/) to get visitor and stats on the site 
