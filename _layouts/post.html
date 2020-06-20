@@ -25,7 +25,9 @@ layout: default
     {{ content }}
   </div>
 </article>
+
 {% if jekyll.environment == 'production' %}
+{% if page.disable-comments != true %}
 <div class="post-comments">
     <div id="hyvor-talk-view"></div>
     <script type="text/javascript">
@@ -37,5 +39,5 @@ layout: default
     </script>
     <script async type="text/javascript" src="//talk.hyvor.com/web-api/embed"></script>
   </div>
-
+{% endif %}
 {% endif %}
