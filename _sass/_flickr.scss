@@ -2,9 +2,9 @@
 	// CONFIGURATION
 	// Colours
 	$colours: (
-		primary-accent: #0076E3, // Main gallery accent colour
+		primary-accent: #1664b7, // Main gallery accent colour
 		secondary-accent: #ff1981,
-		lightbox: #000B10
+		lightbox: #13181bdf
 	);
 	// Image Variables
 	$image-grid: (
@@ -38,7 +38,7 @@
 			}
 		}
 	}
-	@mixin animate($duration: .2s){	// Animates all properties of an object
+	@mixin animate($duration: .4s){	// Animates all properties of an object
 		-webkit-transition: all $duration ease-out;
 		-moz-transition: all $duration ease-out;
 		-o-transition: all $duration ease-out;
@@ -116,7 +116,7 @@
 				opacity: 0;
 				box-sizing: border-box;
 				@include animate;
-
+				
 				&:hover{
 					opacity: 0.5;
 				};
@@ -381,7 +381,7 @@
   box-sizing: border-box;
   clip-path: polygon(50% 0%, 100% 0%, 100% 50%, 50% 50%);
   animation-name: loading;
-  animation-duration: 1.1s;
+  animation-duration: 2.1s;
   animation-iteration-count: infinite;
   animation-timing-function: cubic-beizer(0.17, 0.67, 0.83, 0.67);
 }

@@ -5,8 +5,6 @@ if (typeof window !== 'undefined') window.addEventListener("load", function(even
 function Flickr(options) {
 	var APIKEY = options.apiKey;
     var USERID = options.userId;
-    console.log("API key is " + APIKEY);
-    console.log("USERID is " + USERID);
 
 	function handleRequest(event) {
 		var request = event.target;
@@ -68,8 +66,6 @@ function Flickr(options) {
 		request.id = id;
 		request.onload = handleRequest;
         request.send();
-        console.log("Sending API request to flickr with:");
-        console.log(request);
 	}
 
 	return {
@@ -194,7 +190,6 @@ function handle_click(event){
 			var album = el.getAttribute('album-id');
 			insert_lightbox(requestedImage, album);
 			lightbox.classList.remove('hide');
-			console.log('yip')
 			break;
 		case 'close':
 			lightbox.classList.add('hide');
@@ -300,7 +295,6 @@ function build_album(collection, collectionName, collectionID, options) {
 }
 // 	Builds collections of albums from flickr 'photosets'
 function build_collections(data, options) {
-        console.log(data);
 		var allCollections = data.collections.collection;
 		for(var collection in allCollections){
 			var collectionObject = allCollections[collection];
