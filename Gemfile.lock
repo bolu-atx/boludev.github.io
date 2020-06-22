@@ -61,6 +61,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  flickraw
   jekyll (= 4.1.0)
 
 BUNDLED WITH
