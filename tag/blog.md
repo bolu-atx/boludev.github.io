@@ -1,6 +1,5 @@
 ---
 layout: tag
 tag: blog
-title:Tag blog
-posts:
+title: "Tag blog"
 ---
