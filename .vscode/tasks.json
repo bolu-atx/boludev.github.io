@@ -4,9 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "echo",
+            "label": "Run Jekyll Serve",
             "type": "shell",
-            "command": "echo Hello"
+            "command": "jekyll serve --drafts",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
