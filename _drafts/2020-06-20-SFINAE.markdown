@@ -32,3 +32,61 @@ I also think of SFINAE pattern like function overload lookup on steroids, but al
 
 Prior to C++11, SFINAE implementations mostly uses template overload rules and clever use of the side-effects `sizeof` and `typedefs` to achieve this goal. With C++11's introduction of `std::decltype`, `std::declval`, and `std::enable_if`, the SFINAE pattern becomes a little easier to read and understand.
 
+
+## Case Study
+
+### C++11 switching f(T) based on whether T is an integer or a float
+```cpp
+template<typename T>
+std::enable_if_t<std::is_integral<T>::value> f(T t){
+    //integral version
+}
+template<typename T>
+std::enable_if_t<std::is_floating_point<T>::value> f(T t){
+    //floating point version
+}
+```
+
+
+### Check whether a class has a certain member of certain type
+```cpp
+// Header
+template<typename T>
+struct TypeSink{
+    using Type = void;
+};
+
+template<typename T>
+using TypeSinkT = typename TypeSink<T>::Type;
+
+//use case
+template<typename T, typename=void>
+struct HasBarOfTypeInt : std::false_type{};
+
+template<typename T>
+struct HasBarOfTypeInt<T, TypeSinkT<decltype(std::declval<T&>().*(&T::bar))>> :
+    std::is_same<typename std::decay<decltype(std::declval<T&>().*(&T::bar))>::type,int>{};
+
+struct S{
+   int bar;
+};
+struct K{
+
+};
+
+template<typename T, typename = TypeSinkT<decltype(&T::bar)>>
+void print(T){
+    std::cout << "has bar" << std::endl;
+}
+void print(...){
+    std::cout << "no bar" << std::endl;
+}
+
+int main(){
+    print(S{});
+    print(K{});
+    std::cout << "bar is int: " << HasBarOfTypeInt<S>::value << std::endl;
+}
+```
+
+###

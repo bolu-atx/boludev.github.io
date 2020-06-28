@@ -24,7 +24,6 @@ I have the luxury of having a job that actually works with complex, parallel and
 - [ ] complete lab assignments here: https://pdos.csail.mit.edu/6.824/
 - [ ] read the book "Designing Data-Intensive Applications" by Martin Kleppmann
 
-
 #### 2. Computer Networking (Q3-Q4 of 2020)
 - [ ] finish video lecture series here [Introduction to Computer Networking](https://www.youtube.com/playlist?list=PLvFG2xYBrYAQCyz4Wx3NPoYJOFjvU7g2Z)
 - [ ] Read the book "Computer Networking: A Top-Down Approach (7th Edition)"
