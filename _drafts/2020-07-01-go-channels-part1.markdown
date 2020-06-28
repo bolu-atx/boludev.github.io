@@ -69,7 +69,7 @@ Now, with that introduction, let's see if we can build a Go channel in Cpp. I am
 
 #### Defining the C++ interface
 
-First, let's define a skeleton structure of our Cpp channel:
+First, let's define a basic interface for our cpp `Channel<T>`:
 
 ```cpp
 //
@@ -140,7 +140,7 @@ With this test program ready, we are now ready to work on our `Channel.h`. Let's
 
 ### Single element channel with synchronization
 
-Synchronization mechanisms of channels can be implemented using classic mutex and condition variables. A mutex is a mutual exclusion mechanism provided by hardware that ensures only one thread can access a block of code at any given time. Condition variable, as the name indicates, is a signaling mechanism to allow threads to obain said mutex based on some condition. The implementation of a very very trivial channel (that only allows for one message at a time) is below:
+Synchronization mechanisms of channels can be implemented using mutex and condition variables. A mutex is a mutual exclusion mechanism provided by hardware that ensures only one thread can access a block of code at any given time. Condition variable, as the name indicates, is a signaling mechanism to allow threads to obain said mutex based on some condition. The implementation of a very very trivial channel (that only allows for one message at a time) is below:
 
 ```cpp
 template<class T>
@@ -199,7 +199,7 @@ Got:ping
 Process finished with exit code 0
 ```
 
-However, this Channel implementation is buggy, since it only allows for a single send/receive. If we want to expand this to allow for multiple send/receives, we will need to flesh out the logic a little more with another condition variable in the sender:
+This looks exactly like what we expected - main thread kicks off an concurrent thread to execute, and then listens on the channel, when the task thread sends a message, we then receive it on the main thread. *However, this Channel implementation is buggy, since it only allows for a single send/receive* - if we try to send and receive again, we will get the previous value. To expand this to allow for multiple send/receives, we will need to flesh out the logic a little more, and also add another `wait` step in the sender:
 
 ```cpp
     T receive_blocking()
@@ -212,6 +212,7 @@ However, this Channel implementation is buggy, since it only allows for a single
             });
 
         m_has_value = false;
+        my_value_update.notify_all();
         return m_val;
     };
     void send(T&& val)
@@ -229,4 +230,191 @@ However, this Channel implementation is buggy, since it only allows for a single
     };
 ```
 
-The condition variable in the `send` function will wait if the receiver has not yet removed the previously stored value.
+In this updated implementation, we add another condition variable on the sender side to ensure that the current channel does not contain a value before overwriting the `m_val`. 
+
+To test this implementation, the test program needs to be udpated to send and receive twice:
+
+```cpp
+int main() {
+    std::cout << "Channel created.\n";
+    Channel<std::string> chan;
+
+    auto future = std::async(std::launch::async,
+            [&chan](){
+        std::cout << "Async about to send ping\n";
+        chan.send("ping");
+        std::cout << "Async ping sent, sending pong next\n";
+        chan.send("pong");
+        std::cout << "Async pong sent\n";
+    });
+
+    std::cout << "Main thread about to call receive on channel:\n";
+    auto val = chan.receive_blocking();
+    std::cout << "Got:" << val << std::endl;
+
+    std::cout << "Main thread about to call receive on channel:\n";
+    val = chan.receive_blocking();
+    std::cout << "Got:" << val << std::endl;
+    future.get();
+    return 0;
+}
+```
+
+If our logic worked correctly, the second message "pong" can only be sent after the first message "ping" has been received.
+
+Indeed, this is what we see:
+```
+Channel created.
+Main thread about to call receive on channel:
+Async about to send ping
+Async ping sent, sending pong next
+Got:ping
+Async pong sent
+
+Main thread about to call receive on channel:
+Got:pong
+
+Process finished with exit code 0
+```
+
+### Multivalue channels
+
+Now that our synchronization mechanism is working, we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
+
+we replace the `m_val` and `m_has_value` variables with a single data structure `m_data` of type `std::deque<T>`.
+
+```cpp
+protected:
+    std::deque<T> m_data;
+    std::mutex m_mutex;
+    std::condition_variable m_value_update;
+```
+
+Turned out, with this change, our send/receive logic also simplifies quite a bit - since we no longer need to use a condition variable to check to ensure there is a spot available in the channel to avoid overwriting a previously un-seen message. Also note, we added a function `empty()` to return whether there is any data in the queue.
+
+```cpp
+T receive_blocking()
+{
+    std::unique_lock<std::mutex> the_lock(m_mutex);
+    m_value_update.wait(the_lock, [this]
+    {
+        return !empty();
+    });
+
+    T val = std::move(m_data.front());
+    m_data.pop_front();
+    return val;
+};
+void send(T&& val)
+{
+    std::unique_lock<std::mutex> the_lock(m_mutex);
+    m_data.emplace_back(val);
+    m_value_update.notify_all();
+};
+
+bool empty() const {
+    return m_data.empty();
+}
+```
+
+
+Running this on our test program:
+
+```
+Channel created.
+Main thread about to call receive on channel:
+Async about to send ping
+Async ping sent, sending pong next
+Async pong sent
+Got:ping
+Main thread about to call receive on channel:
+Got:pong
+```
+
+We got the desired behavior - the messages came in order (ping fisrt, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. Now, let's finish the rest of the logic for completeness:
+
+```cpp
+//
+// Created by Bo Lu on 6/28/20.
+//
+#pragma once
+#include <mutex>
+#include <condition_variable>
+#include <deque>
+
+template<class T>
+class Channel {
+public:
+    Channel() {};
+    virtual ~Channel() {};
+
+protected:
+    Channel& operator=(const Channel& other ) = delete;
+    Channel(const Channel& other) = delete;
+
+public:
+    T receive_blocking()
+    {
+        std::unique_lock<std::mutex> the_lock(m_mutex);
+        m_value_update.wait(the_lock, [this]
+        {
+            return !is_empty() || !is_open();
+        });
+
+        if (!is_open())
+            throw std::runtime_error("Channel closed.");
+
+        T val = std::move(m_data.front());
+        m_data.pop_front();
+        return val;
+    };
+    void send(T&& val)
+    {
+        std::unique_lock<std::mutex> the_lock(m_mutex);
+        if (is_open())
+        {
+            m_data.emplace_back(val);
+            m_value_update.notify_all();
+        }
+    };
+
+    void close() {
+        std::unique_lock<std::mutex> the_lock(m_mutex);
+        m_open = false;
+    };
+
+protected:
+    bool is_open() const {
+        return m_open;
+    }
+
+    bool is_empty() const {
+        return m_data.empty();
+    }
+protected:
+    std::deque<T> m_data;
+    std::mutex m_mutex;
+    std::condition_variable m_value_update;
+    bool m_open {true};
+};
+```
+This version of the `Channel<T>` now allows us to `close()` the channel from either the sender or the receiver. If the channel is closed while another thread is waiting via `receive_blocking`, an exception will be thrown.
+
+Lastly, we need to add a clean-up clause in the desctructor:
+
+```cpp
+    virtual ~Channel() {
+        if (is_open())
+            close();
+    };
+```
+
+## Summary
+
+Now, we have a basic Channel that can be used for mutlithreaded synchronization in cpp:
+
+- We gradually built up the synchronization, and then introduced additional components
+- Condition variables and mutex used together implements the synchronization machinery behind the scene in our channel
+- Through the use of `r-value` references and `std::move`, we ensure that our channel does not copy by value and is extremely performant. We also enforce "ownership" of the data to be single owner in our implementation, thereby supressing data races and other multithreading bugs.
+
+In the next part, we will explore how to implement other components of Go channel, i.e. range for loops and fixed size channels.
