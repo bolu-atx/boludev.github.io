@@ -119,21 +119,21 @@ For small buffers less than 200kb, the behavior is that the deallocation calls a
 Number of elements: 1024 expected memory: 2 kb 
 Before allocation: virt: 13232 kb, physical: 0 kb
 Before destruction: virt: 13236 kb, physical: 1476 kb 
-After desctruction: virt: 13236 kb, physical: 1476 kb
+After destruction: virt: 13236 kb, physical: 1476 kb
 Allocation virt: 4 kb, physical: 40 kb
 Deallocation virt: 0 kb, physical: 0 kb
 
 Number of elements: 10240 expected memory: 20 kb 
 Before allocation: virt: 13236 kb, physical: 1476 kb
 Before destruction: virt: 13236 kb, physical: 1492 kb 
-After desctruction: virt: 13236 kb, physical: 1492 kb
+After destruction: virt: 13236 kb, physical: 1492 kb
 Allocation virt: 0 kb, physical: 16 kb
 Deallocation virt: 0 kb, physical: 0 kb
 
 Number of elements: 102400 expected memory: 200 kb 
 Before allocation: virt: 13236 kb, physical: 1492 kb
 Before destruction: virt: 13436 kb, physical: 1672 kb 
-After desctruction: virt: 13436 kb, physical: 1672 kb
+After destruction: virt: 13436 kb, physical: 1672 kb
 Allocation virt: 200 kb, physical: 180 kb
 Deallocation virt: 0 kb, physical: 0 kb
 ```
@@ -144,7 +144,7 @@ But for larger buffers (>200kb), the memory does get returned as soon as you cal
 Number of elements: 1073741824 expected memory: 2097152 kb 
 Before allocation: virt: 13236 kb, physical: 1476 kb
 Before destruction: virt: 2110392 kb, physical: 2098632 kb 
-After desctruction: virt: 13236 kb, physical: 1476 kb
+After destruction: virt: 13236 kb, physical: 1476 kb
 Allocation virt: 2097156 kb, physical: 2097156 kb
 Deallocation virt: 2097156 kb, physical: 2097156 kb
 
@@ -152,14 +152,14 @@ Deallocation virt: 2097156 kb, physical: 2097156 kb
 Number of elements: 10485760 expected memory: 20480 kb 
 Before allocation: virt: 13236 kb, physical: 1492 kb
 Before destruction: virt: 33720 kb, physical: 21976 kb 
-After desctruction: virt: 13236 kb, physical: 1492 kb
+After destruction: virt: 13236 kb, physical: 1492 kb
 Allocation virt: 20484 kb, physical: 20484 kb
 Deallocation virt: 20484 kb, physical: 20484 kb
 
 Number of elements: 104857600 expected memory: 204800 kb 
 Before allocation: virt: 13236 kb, physical: 1492 kb
 Before destruction: virt: 218040 kb, physical: 206296 kb 
-After desctruction: virt: 13236 kb, physical: 1492 kb
+After destruction: virt: 13236 kb, physical: 1492 kb
 Allocation virt: 204804 kb, physical: 204804 kb
 Deallocation virt: 204804 kb, physical: 204804 kb
 
@@ -167,7 +167,7 @@ Deallocation virt: 204804 kb, physical: 204804 kb
 Number of elements: 1048576 expected memory: 2048 kb 
 Before allocation: virt: 13236 kb, physical: 1492 kb
 Before destruction: virt: 15288 kb, physical: 3544 kb 
-After desctruction: virt: 13236 kb, physical: 1492 kb
+After destruction: virt: 13236 kb, physical: 1492 kb
 Allocation virt: 2052 kb, physical: 2052 kb
 Deallocation virt: 2052 kb, physical: 2052 kb
 ```
@@ -207,7 +207,7 @@ bool free_mmap(void* ptr, const size_t sz)
 }
 ```
 
-This is pretty simple since we need the size of the buffer to deallocate, but we can make this more complex by storing the pointer and size into some map to be looked-up later.
+This is pretty simple since we need the size of the buffer to de-allocate, but we can make this more complex by storing the pointer and size into some map to be looked-up later.
 
 Another optimization that might be good to do is to overload the default `new` and `free` methods in C++, an example/tutorial is [available here](https://www.geeksforgeeks.org/overloading-new-delete-operator-c/).
 
@@ -217,7 +217,7 @@ Using this allocator and re-testing the small size allocations, we get the follo
 Number of elements: 10240 expected memory: 20 kb 
 Before allocation: virt: 13240 kb, physical: 1476 kb
 Before destruction: virt: 13260 kb, physical: 1496 kb 
-After desctruction: virt: 13240 kb, physical: 1476 kb
+After destruction: virt: 13240 kb, physical: 1476 kb
 Allocation virt: 20 kb, physical: 20 kb
 Deallocation virt: 20 kb, physical: 20 kb
 
@@ -225,7 +225,7 @@ Deallocation virt: 20 kb, physical: 20 kb
 Number of elements: 102400 expected memory: 200 kb 
 Before allocation: virt: 13240 kb, physical: 1476 kb
 Before destruction: virt: 13440 kb, physical: 1676 kb 
-After desctruction: virt: 13240 kb, physical: 1476 kb
+After destruction: virt: 13240 kb, physical: 1476 kb
 Allocation virt: 200 kb, physical: 200 kb
 Deallocation virt: 200 kb, physical: 200 kb
 ```
@@ -251,7 +251,7 @@ After using jemalloc, we can see the memory allocation behavior definitely chang
 Number of elements: 1024 expected memory: 2 kb 
 Before allocation: virt: 25648 kb, physical: 0 kb
 Before destruction: virt: 25652 kb, physical: 1712 kb 
-After desctruction: virt: 25652 kb, physical: 1712 kb
+After destruction: virt: 25652 kb, physical: 1712 kb
 Allocation virt: 4 kb, physical: 40 kb
 Deallocation virt: 0 kb, physical: 0 kb
 
@@ -259,7 +259,7 @@ Deallocation virt: 0 kb, physical: 0 kb
 Number of elements: 102400 expected memory: 200 kb 
 Before allocation: virt: 25652 kb, physical: 1712 kb
 Before destruction: virt: 25652 kb, physical: 1912 kb 
-After desctruction: virt: 25652 kb, physical: 1716 kb
+After destruction: virt: 25652 kb, physical: 1716 kb
 Allocation virt: 0 kb, physical: 200 kb
 Deallocation virt: 0 kb, physical: 196 kb
 
@@ -267,7 +267,7 @@ Deallocation virt: 0 kb, physical: 196 kb
 Number of elements: 10240 expected memory: 20 kb 
 Before allocation: virt: 25652 kb, physical: 1716 kb
 Before destruction: virt: 25652 kb, physical: 1736 kb 
-After desctruction: virt: 25652 kb, physical: 1740 kb
+After destruction: virt: 25652 kb, physical: 1740 kb
 Allocation virt: 0 kb, physical: 20 kb
 Deallocation virt: 0 kb, physical: -4 kb
 
@@ -275,7 +275,7 @@ Deallocation virt: 0 kb, physical: -4 kb
 Number of elements: 1048576 expected memory: 2048 kb 
 Before allocation: virt: 25652 kb, physical: 1740 kb
 Before destruction: virt: 25652 kb, physical: 3792 kb 
-After desctruction: virt: 25652 kb, physical: 1752 kb
+After destruction: virt: 25652 kb, physical: 1752 kb
 Allocation virt: 0 kb, physical: 2052 kb
 Deallocation virt: 0 kb, physical: 2040 kb
 
@@ -283,7 +283,7 @@ Deallocation virt: 0 kb, physical: 2040 kb
 Number of elements: 10485760 expected memory: 20480 kb 
 Before allocation: virt: 25652 kb, physical: 1752 kb
 Before destruction: virt: 46132 kb, physical: 22236 kb 
-After desctruction: virt: 46132 kb, physical: 1756 kb
+After destruction: virt: 46132 kb, physical: 1756 kb
 Allocation virt: 20480 kb, physical: 20484 kb
 Deallocation virt: 0 kb, physical: 20480 kb
 ```

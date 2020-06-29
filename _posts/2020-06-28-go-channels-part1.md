@@ -8,7 +8,7 @@ categories: programming
 ---
 
 
-Go channels is the de-factor synchronization mehcanisms in Go. They are the pipes that connect concurrent goroutines.
+Go channels is the de-facto synchronization mechanism in Go. They are the pipes that connect concurrent go routines.
 You can send values into channels from one goroutine and receive those values into another goroutine.
 Having channels have made writing multi-threaded concurrent programs really simple in Go. 
 In this series, I wanted to see if it's possible to re-create it in cpp.
@@ -45,7 +45,7 @@ func main() {
 In this example, we first create a channel, then kick off a separate thread to send the message "ping" into the channel, and then receives that message in the main thread.
 
 - Channels have a type, in this case, string
-- Channels are used in concurrent multithreaded scenarios, as indicated by the asynchronous goroutine 
+- Channels are used in concurrent multi-threaded scenarios, as indicated by the asynchronous goroutine 
 - Channels have operators similar to streams in c++, where we can "push" and "pull"
 - Channels by default have blocking reads - otherwise, the `msg := <- messages` would be executed right away before go-routine spawned in the line above had a chance to finish
 - By default, channels in go can contain any number of elements
@@ -150,7 +150,7 @@ With this test program ready, we are now ready to work on our `Channel.h`. Let's
 
 ### Single element channel with synchronization
 
-Synchronization mechanisms of channels can be implemented using mutex and condition variables. A mutex is a mutual exclusion mechanism provided by hardware that ensures only one thread can access a block of code at any given time. Condition variable, as the name indicates, is a signaling mechanism to allow threads to obain said mutex based on some condition. The implementation of a very very trivial channel (that only allows for one message at a time) is below:
+Synchronization mechanisms of channels can be implemented using mutex and condition variables. A mutex is a mutual exclusion mechanism provided by hardware that ensures only one thread can access a block of code at any given time. Condition variable, as the name indicates, is a signaling mechanism to allow threads to obtain said mutex based on some condition. The implementation of a very very trivial channel (that only allows for one message at a time) is below:
 
 ```cpp
 template<class T>
@@ -196,7 +196,7 @@ protected:
 };
 ```
 
-In the above code, when a thread tries to either `send` or `receive` on a message, we will first need to obain the `mutex`. For the receiver, then we need to check if `m_has_value` boolean flag is true in the `m_value_update.wait()` method. This condition variable clause will let go of the mutex as long as the predicate (the second argument, a function) is returning false. 
+In the above code, when a thread tries to either `send` or `receive` on a message, we will first need to obtain the `mutex`. For the receiver, then we need to check if `m_has_value` boolean flag is true in the `m_value_update.wait()` method. This condition variable clause will let go of the mutex as long as the predicate (the second argument, a function) is returning false. 
 
 Running the main test program with this implementation gives us the following outputs:
 ```
@@ -242,7 +242,7 @@ This looks exactly like what we expected - main thread kicks off an concurrent t
 
 In this updated implementation, we add another condition variable on the sender side to ensure that the current channel does not contain a value before overwriting the `m_val`. 
 
-To test this implementation, the test program needs to be udpated to send and receive twice:
+To test this implementation, the test program needs to be updated to send and receive twice:
 
 ```cpp
 int main() {
@@ -287,7 +287,7 @@ Got:pong
 Process finished with exit code 0
 ```
 
-### Multivalue channels
+### Multi-value channels
 
 Now that our synchronization mechanism is working, we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
 
@@ -341,7 +341,7 @@ Main thread about to call receive on channel:
 Got:pong
 ```
 
-We got the desired behavior - the messages came in order (ping fisrt, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. Now, let's finish the rest of the logic for completeness:
+We got the desired behavior - the messages came in order (ping first, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. Now, let's finish the rest of the logic for completeness:
 
 ```cpp
 //
@@ -410,7 +410,7 @@ protected:
 ```
 This version of the `Channel<T>` now allows us to `close()` the channel from either the sender or the receiver. If the channel is closed while another thread is waiting via `receive_blocking`, an exception will be thrown.
 
-Lastly, we need to add a clean-up clause in the desctructor:
+Lastly, we need to add a clean-up clause in the destructor:
 
 ```cpp
     virtual ~Channel() {
@@ -421,10 +421,11 @@ Lastly, we need to add a clean-up clause in the desctructor:
 
 ## Summary
 
-Now, we have a basic Channel that can be used for mutlithreaded synchronization in cpp:
+Now, we have a basic Channel that can be used for mutli-threaded synchronization in cpp:
 
 - We gradually built up the synchronization, and then introduced additional components
 - Condition variables and mutex used together implements the synchronization machinery behind the scene in our channel
-- Through the use of `r-value` references and `std::move`, we ensure that our channel does not copy by value and is extremely performant. We also enforce "ownership" of the data to be single owner in our implementation, thereby supressing data races and other multithreading bugs.
+- Through the use of `r-value` references and `std::move`, we ensure that our channel does not copy by value and is extremely performant.
+ We also enforce "ownership" of the data to be single owner in our implementation, thereby suppressing data races and other multi-threading bugs.
 
 In the next part, we will explore how to implement other components of Go channel, i.e. range for loops and fixed size channels.
