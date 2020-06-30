@@ -23,7 +23,7 @@ Before I start, I wanted to just mention there are already plenty of amazing cpp
 My write-up is not meant to recreate these libraries, but to dissect the fundamental building blocks of Go channel and examine how they can be re-created in C++.
 
 
-### Introduction to Go Channels
+## Introduction to Go Channels
 
 Let's look at the most basic version of a Go channel usage from this [gobyexample article](https://gobyexample.com/channels).
 ```go
@@ -47,10 +47,10 @@ In this example, we first create a channel, then kick off a separate thread to s
 - Channels have a type, in this case, string
 - Channels are used in concurrent multi-threaded scenarios, as indicated by the asynchronous goroutine 
 - Channels have operators similar to streams in c++, where we can "push" and "pull"
-- Channels by default have blocking reads - otherwise, the `msg := <- messages` would be executed right away before go-routine spawned in the line above had a chance to finish
-- By default, channels in go can contain any number of elements
+- Channels by default have blocking send/receive - otherwise, the `msg := <- messages` would be executed right away before go-routine spawned in the line above had a chance to finish
+- By default, channels do not hold memory and only allow for one thing to be sent/received
 
-Here's a more complicated example to show multiple items and blocking of Go channels
+To send multiple items across the channel, we need to specify a capacity and create a **buffered** channel. This is an example: 
 
 ```go
 package main
@@ -69,15 +69,14 @@ func main() {
     }
 }
 ```
-
 - In this example, we made a channel with a fixed size of 2
 - We also called `close` on the channel, otherwise, the `for` loop in the main thread receiving the channel messages will loop over the existing results, and then block indefinitely waiting for the 3rd item (which will never come).
 
-### Implementing Channels in Cpp
+## Implementing Channels in Cpp
 
 Now, with that introduction, let's see if we can build a Go channel in Cpp. I am using c++11 standard for this exercise.
 
-#### Defining the C++ interface
+### Defining the C++ interface
 
 First, let's define a basic interface for our cpp `Channel<T>`:
 
@@ -168,7 +167,7 @@ public:
     {
         std::unique_lock<std::mutex> the_lock(m_mutex);
 
-        m_value_update.wait(the_lock, [this]
+        m_cv.wait(the_lock, [this]
             {
             return m_has_value;
         });
@@ -182,7 +181,7 @@ public:
             m_val = val;
             m_has_value = true;
         }
-        m_value_update.notify_all();
+        m_cv.notify_all();
     };
 
     void close();
@@ -192,11 +191,11 @@ protected:
     bool m_has_value {false};
 
     std::mutex m_mutex;
-    std::condition_variable m_value_update;
+    std::condition_variable m_cv;
 };
 ```
 
-In the above code, when a thread tries to either `send` or `receive` on a message, we will first need to obtain the `mutex`. For the receiver, then we need to check if `m_has_value` boolean flag is true in the `m_value_update.wait()` method. This condition variable clause will let go of the mutex as long as the predicate (the second argument, a function) is returning false. 
+In the above code, when a thread tries to either `send` or `receive` on a message, we will first need to obtain the `mutex`. For the receiver, then we need to check if `m_has_value` boolean flag is true in the `m_cv.wait()` method. This condition variable clause will let go of the mutex as long as the predicate (the second argument, a function) is returning false. 
 
 Running the main test program with this implementation gives us the following outputs:
 ```
@@ -216,30 +215,29 @@ This looks exactly like what we expected - main thread kicks off an concurrent t
     {
         std::unique_lock<std::mutex> the_lock(m_mutex);
 
-        m_value_update.wait(the_lock, [this]
+        m_cv.wait(the_lock, [this]
             {
                 return m_has_value;
             });
 
         m_has_value = false;
-        my_value_update.notify_all();
+        my_cv.notify_all();
         return m_val;
     };
     void send(T&& val)
     {
         {
             std::unique_lock<std::mutex> the_lock(m_mutex);
-            m_value_update.wait(the_lock, [this]
+            m_cv.wait(the_lock, [this]
             {
                 return !m_has_value;
             });
             m_val = val;
             m_has_value = true;
         }
-        m_value_update.notify_all();
+        m_cv.notify_all();
     };
 ```
-
 In this updated implementation, we add another condition variable on the sender side to ensure that the current channel does not contain a value before overwriting the `m_val`. 
 
 To test this implementation, the test program needs to be updated to send and receive twice:
@@ -287,71 +285,78 @@ Got:pong
 Process finished with exit code 0
 ```
 
-### Multi-value channels
+However, this implementation, while correct in behavior, does not fully mimic Go's definition of a channel. In Go, both the send and receive are blocking operations - which means, if a thread is sending data into the channel, it will "block" at the send operation until there's is another thread that is ready to receive on the other end. To illustrate this point, here's a Go program where we delay the receive operation by 2 seconds after launching the thread to send the "ping".
 
-Now that our synchronization mechanism is working, we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
+```go
+package main
+import (
+  "fmt"
+  "time"
+)
+func elapsed(what string) func() {
+    start := time.Now()
+    return func() {
+        fmt.Printf("%s took %v\n", what, time.Since(start))
+    }
+}
+func main() {
 
-we replace the `m_val` and `m_has_value` variables with a single data structure `m_data` of type `std::deque<T>`.
+  messages := make(chan string)
 
-```cpp
-protected:
-    std::deque<T> m_data;
-    std::mutex m_mutex;
-    std::condition_variable m_value_update;
-```
+  go func() {
+    defer elapsed("send")()
+    fmt.Println("thread: about to ping")
+    messages <- "thread: ping"
+    fmt.Println("thread: ping done")
+  }()
 
-Turned out, with this change, our send/receive logic also simplifies quite a bit - since we no longer need to use a condition variable to check to ensure there is a spot available in the channel to avoid overwriting a previously un-seen message. Also note, we added a function `empty()` to return whether there is any data in the queue.
-
-```cpp
-T receive_blocking()
-{
-    std::unique_lock<std::mutex> the_lock(m_mutex);
-    m_value_update.wait(the_lock, [this]
-    {
-        return !empty();
-    });
-
-    T val = std::move(m_data.front());
-    m_data.pop_front();
-    return val;
-};
-void send(T&& val)
-{
-    std::unique_lock<std::mutex> the_lock(m_mutex);
-    m_data.emplace_back(val);
-    m_value_update.notify_all();
-};
-
-bool empty() const {
-    return m_data.empty();
+  {
+    defer elapsed("receive")()
+    time.Sleep(2 * time.Second)
+    fmt.Println("main: about to receive")
+    msg := <-messages
+    fmt.Println("main: receive done")
+    fmt.Println("got: " + msg)
+  }
+  time.Sleep(10 * time.Millisecond)
 }
 ```
+The `defer elapsed(label)()` in this program is an utility function that reports the time took. The output of this program is:
+```
+about to ping
+main: about to receive
+main: receive done
+got: ping
+ping done
 
+send took 2.0010819s
+receive took 2.0116594s
+```
 
-Running this on our test program:
+Note that the send operation took just as long as the receive operation, even though the "send" thread was launched without any delays.
 
+If we run the same timing function on our cpp implementation (test program update in later text), we'll get the following output:
 ```
 Channel created.
-Main thread about to call receive on channel:
 Async about to send ping
+send1 took 0 s.
 Async ping sent, sending pong next
 Async pong sent
-Got:ping
+Main thread about to call receive on channel:
+Got:pong
+receive1 took 2 s.
 Main thread about to call receive on channel:
 Got:pong
 ```
+Note that the first send returned right away - which is different from the Go program we showed earlier.
 
-We got the desired behavior - the messages came in order (ping first, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. Now, let's finish the rest of the logic for completeness:
+To implement this kind of synchronization, we not only need to have a flag to track whether we have a value to be received, also another flag to track whether both sender / receiver are on the channel. With these two flags, we also need to update the wait Predicate function to reflect that:
+
+- If the receiver thread is holding the mutex, we will need to have a receiver and have a value set before we proceed to read from the channel internal data member
+- If the sender thread has the mutex, the CV will only acquire the lock if we have a receiver, and the channel currently does not have another value in place
+- If the receiver thread acquires the mutex, we need to ensure we broadcast via the condition variable that a receiver is available to senders that are waiting
 
 ```cpp
-//
-// Created by Bo Lu on 6/28/20.
-//
-#pragma once
-#include <mutex>
-#include <condition_variable>
-#include <deque>
-
 template<class T>
 class Channel {
 public:
@@ -366,61 +371,127 @@ public:
     T receive_blocking()
     {
         std::unique_lock<std::mutex> the_lock(m_mutex);
-        m_value_update.wait(the_lock, [this]
+        m_has_receiver = true;
+        m_cv.notify_all();
+        m_cv.wait(the_lock, [this]
         {
-            return !is_empty() || !is_open();
+            return (m_has_receiver && m_has_value);
         });
 
-        if (!is_open())
-            throw std::runtime_error("Channel closed.");
-
-        T val = std::move(m_data.front());
-        m_data.pop_front();
-        return val;
+        m_has_value = false;
+        m_has_receiver = false;
+        return std::move(m_val);
     };
     void send(T&& val)
     {
         std::unique_lock<std::mutex> the_lock(m_mutex);
-        if (is_open())
+        m_cv.wait(the_lock, [this]
         {
-            m_data.emplace_back(val);
-            m_value_update.notify_all();
-        }
+            return (m_has_receiver && !m_has_value);
+        });
+        m_val = val;
+        m_has_value = true;
+        m_cv.notify_all();
     };
 
-    void close() {
-        std::unique_lock<std::mutex> the_lock(m_mutex);
-        m_open = false;
-    };
+    void close();
 
 protected:
-    bool is_open() const {
-        return m_open;
-    }
+    T m_val;
+    bool m_has_value {false};
+    bool m_has_receiver {false};
 
-    bool is_empty() const {
-        return m_data.empty();
-    }
-protected:
-    std::deque<T> m_data;
     std::mutex m_mutex;
-    std::condition_variable m_value_update;
-    bool m_open {true};
+    std::condition_variable m_cv;
 };
 ```
-This version of the `Channel<T>` now allows us to `close()` the channel from either the sender or the receiver. If the channel is closed while another thread is waiting via `receive_blocking`, an exception will be thrown.
 
-Lastly, we need to add a clean-up clause in the destructor:
+To verify that this works, we needed to update our test program to add ability to track how long the send/receive operation took, below is the updated test program where we will now report the first "ping"'s send duration and also receive duration.
 
 ```cpp
-    virtual ~Channel() {
-        if (is_open())
-            close();
-    };
+#include <iostream>
+#include <string>
+#include <future>
+#include <chrono>
+#include <thread>
+#include <sstream>
+
+#include "Channel.h"
+
+#define THREADSAFE(MESSAGE) \
+        ( static_cast<std::ostringstream&>(std::ostringstream().flush() << MESSAGE).str())
+
+struct timer {
+    timer(const std::string& label)
+    {
+        m_label = label;
+        m_start = std::chrono::high_resolution_clock::now();
+    }
+    ~timer()
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>( end - m_start ).count();
+        std::cout << THREADSAFE(m_label << " took " << duration << " s.\n");
+    }
+
+    std::chrono::time_point<std::chrono::steady_clock> m_start;
+    std::string m_label;
+};
+
+int main() {
+    using namespace std::chrono_literals;
+
+    std::cout << "Channel created.\n";
+    Channel<std::string> chan;
+
+    auto future = std::async(std::launch::async,
+            [&chan](){
+                {
+                    auto t = timer("send1");
+                    std::cout << "Async about to send ping\n";
+                    chan.send("ping");
+                }
+        std::cout << "Async ping sent, sending pong next\n";
+        chan.send("pong");
+        std::cout << "Async pong sent\n";
+    });
+
+    // we only care about the first send for this exercise
+    {
+        auto t2 = timer("receive1");
+        std::this_thread::sleep_for(2s);
+        std::cout << "Main thread about to call receive on channel:\n";
+        auto val = chan.receive_blocking();
+        std::cout << THREADSAFE("Got:" << val << std::endl);
+    }
+
+    std::cout << "Main thread about to call receive on channel:\n";
+    auto val = chan.receive_blocking();
+    std::cout << THREADSAFE("Got:" << val << std::endl);
+
+    future.get();
+    return 0;
+}
 ```
 
-## Summary
 
+Running this code yields the following output:
+```
+Channel created.
+Async about to send ping
+Main thread about to call receive on channel:
+Got:ping
+send1 took 2 s.
+Async ping sent, sending pong next
+receive1 took 2 s.
+Main thread about to call receive on channel:
+Async pong sent
+Got:pong
+```
+
+Just as we expected, with these changes, the updated program now behaves fully like a Go channel now.
+
+## Summary
 Now, we have a basic Channel that can be used for mutli-threaded synchronization in cpp:
 
 - We gradually built up the synchronization, and then introduced additional components
@@ -428,4 +499,4 @@ Now, we have a basic Channel that can be used for mutli-threaded synchronization
 - Through the use of `r-value` references and `std::move`, we ensure that our channel does not copy by value and is extremely performant.
  We also enforce "ownership" of the data to be single owner in our implementation, thereby suppressing data races and other multi-threading bugs.
 
-In the next part, we will explore how to implement other components of Go channel, i.e. range for loops and fixed size channels.
+This concludes the part 1 of my Go channel series. In the next part, we will explore how to make a buffered channel that support range for loops, predefined sizes, and async operations
