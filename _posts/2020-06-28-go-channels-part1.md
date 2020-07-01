@@ -50,28 +50,6 @@ In this example, we first create a channel, then kick off a separate thread to s
 - Channels by default have blocking send/receive - otherwise, the `msg := <- messages` would be executed right away before go-routine spawned in the line above had a chance to finish
 - By default, channels do not hold memory and only allow for one thing to be sent/received
 
-To send multiple items across the channel, we need to specify a capacity and create a **buffered** channel. This is an example: 
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-
-    queue := make(chan string, 2)
-    queue <- "one"
-    queue <- "two"
-    close(queue)
-
-    for elem := range queue {
-        fmt.Println(elem)
-    }
-}
-```
-- In this example, we made a channel with a fixed size of 2
-- We also called `close` on the channel, otherwise, the `for` loop in the main thread receiving the channel messages will loop over the existing results, and then block indefinitely waiting for the 3rd item (which will never come).
-
 ## Implementing Channels in Cpp
 
 Now, with that introduction, let's see if we can build a Go channel in Cpp. I am using c++11 standard for this exercise.
@@ -335,7 +313,30 @@ receive took 2.0116594s
 
 Note that the send operation took just as long as the receive operation, even though the "send" thread was launched without any delays.
 
-If we run the same timing function on our cpp implementation (test program update in later text), we'll get the following output:
+Modifying our test program with a simple timer function to report out the timing in our cpp implementation:
+```cpp
+#define THREADSAFE(MESSAGE) \
+        ( static_cast<std::ostringstream&>(std::ostringstream().flush() << MESSAGE).str())
+
+struct timer {
+    timer(const std::string& label)
+    {
+        m_label = label;
+        m_start = std::chrono::high_resolution_clock::now();
+    }
+    ~timer()
+    {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>( end - m_start ).count();
+        std::cout << THREADSAFE(m_label << " took " << duration << " s.\n");
+    }
+
+    std::chrono::time_point<std::chrono::steady_clock> m_start;
+    std::string m_label;
+};
+```
+
+ we'll get the following output:
 ```
 Channel created.
 Async about to send ping
@@ -348,9 +349,9 @@ receive1 took 2 s.
 Main thread about to call receive on channel:
 Got:pong
 ```
-Note that the first send returned right away - which is different from the Go program we showed earlier.
+Note that the first send returned right away and took 0s - this is different from the Go implementation, since it allows for a sender to send something without having a receiver on the other end.
 
-To implement this kind of synchronization, we not only need to have a flag to track whether we have a value to be received, also another flag to track whether both sender / receiver are on the channel. With these two flags, we also need to update the wait Predicate function to reflect that:
+To implement the Go channel synchronization behavior, we not only need to have a flag to track whether we have a value to be received, also another flag to track whether both sender / receiver are on the channel. With these two flags, we also need to update the wait Predicate function to reflect that:
 
 - If the receiver thread is holding the mutex, we will need to have a receiver and have a value set before we proceed to read from the channel internal data member
 - If the sender thread has the mutex, the CV will only acquire the lock if we have a receiver, and the channel currently does not have another value in place
