@@ -16,9 +16,8 @@ In this series, I wanted to see if it's possible to re-create it in cpp.
 
 Before I start, I wanted to just mention there are already plenty of amazing cpp libraries out there that recreates Go channels, such as:
 
-- https://github.com/ahorn/cpp-channel
-- https://github.com/Balnian/ChannelsCPP
-- https://st.xorian.net/blog/2012/08/go-style-channel-in-c/
+- [ahorn/cpp-channel](https://github.com/ahorn/cpp-channel)
+- [Balnian/ChannelsCPP](https://github.com/Balnian/ChannelsCPP)
 
 My write-up is not meant to recreate these libraries, but to dissect the fundamental building blocks of Go channel and examine how they can be re-created in C++.
 
@@ -501,3 +500,7 @@ Now, we have a basic Channel that can be used for mutli-threaded synchronization
  We also enforce "ownership" of the data to be single owner in our implementation, thereby suppressing data races and other multi-threading bugs.
 
 This concludes the part 1 of my Go channel series. In the next part, we will explore how to make a buffered channel that support range for loops, predefined sizes, and async operations
+
+## Source Code
+
+All source code for this write-up is available on my Github @ [bolu-atx/go-channels-in-cpp](https://github.com/bolu-atx/go-channels-in-cpp)
