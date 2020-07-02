@@ -1,13 +1,20 @@
 ---
 layout: post
 title:  "Go channels in Cpp, part 2"
-date:   2020-07-02 12:06:06 -0700
+date:   2020-07-02 7:06:06 -0700
 tags: cpp multithreading
 author: bolu-atx
 categories: programming
 ---
 
 In this part 2 of the Go channel series, I will expand the `Channel<T>` class we developed to support multiple elements, range for loops and asynchronous operations.
+
+Part one of this series, where we built a simple Go channel with similar synchronization behavior is available [here]({% post_url 2020-06-28-go-channels-part1 %}).
+
+Buffered channels are desirable in many parallel applications such as work queues, worker pools, threadpool, MCMP (multiple consumers/producers) patterns. If they are well designed, they can be used to construct much larger complex, performant applications. Even though these buffered channels are still called channels, I would consider them to be an entirely different class and have different purpose than single element channels. The objective for buffered channel is less so of synchronization, but more to deal with non-deterministic input/output "flow rate" into a system.
+
+<img src="/assets/posts-media/go-channel.png" width="500" />
+
 
 ## Multi-value channels
 
