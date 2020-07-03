@@ -11,15 +11,16 @@ In this part 2 of the Go channel series, I will expand the `Channel<T>` class we
 
 Part one of this series, where we built a simple Go channel with similar synchronization behavior is available [here]({% post_url 2020-06-28-go-channels-part1 %}).
 
-Buffered channels are desirable in many parallel applications such as work queues, worker pools, threadpool, MCMP (multiple consumers/producers) patterns. If they are well designed, they can be used to construct much larger complex, performant applications. Even though these buffered channels are still called channels, I would consider them to be an entirely different class and have different purpose than single element channels. The objective for buffered channel is less so of synchronization, but more to deal with non-deterministic input/output "flow rate" into a system.
+Buffered channels are desirable in many parallel applications such as work queues, worker/thread pools, MCMP (multiple consumers/producers) patterns.
+
+Well designed, large scale complex concurrent systems are often built from a few fairly simple building blocks such as buffered channels. Even though these buffered channels are still constructed the same way in Go, they are actually entirely different in behavior from simple channels, and really behave differently. The objective for buffered channel is less so of synchronization, but more to deal with non-deterministic input/output "flow rate" into a system. As a result, in buffered channels, send/receive operations are non-blocking provided there is capacity in the channel. In addition, they have storage, whereas simple channel is more of a "pass-through" entity.
 
 <img src="/assets/posts-media/go-channel.png" width="500" />
 
-
-## Multi-value channels
+## Buffered Channels
 
 ### Go Example - A Buffered Channel
-To send multiple items across the channel, we need to specify a capacity and create a **buffered** channel. This is an example: 
+From [part 1]({% post_url 2020-06-28-go-channels-part1 %}), we know that if a sender/receiver is not paired together, the channel send/receive operations will never take place. As a result, if we run the following code, Go's deadlock detector will detect a panic and crash immediately.
 
 ```go
 package main
@@ -28,7 +29,7 @@ import "fmt"
 
 func main() {
 
-    queue := make(chan string, 2)
+    queue := make(chan string)
     queue <- "one"
     queue <- "two"
     close(queue)
@@ -38,12 +39,38 @@ func main() {
     }
 }
 ```
+
+```
+▶ go run deadlock_1thread.go
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan send]:
+main.main()
+        /Users/blu/Repos/go-channels-in-cpp/go/deadlock_1thread.go:8 +0x59
+exit status 2
+```
+
+
+ To make this code work, we need to make this a **buffered** channel. Buffered channel have asynchronous send, and therefore can be executed without having a listener on the other side. To make a buffered channel, we simply specify the channel capacity as the 2nd argument when constructing the channel.
+
+```go
+    queue := make(chan string, 2)
+```
+
+With this fix, we see the correct behavior
+```
+▶ go run deadlock_1thread.go
+one
+two
+```
+
 - In this example, we made a channel with a fixed size of 2
 - We also called `close` on the channel, otherwise, the `for` loop in the main thread receiving the channel messages will loop over the existing results, and then block indefinitely waiting for the 3rd item (which will never come).
 
 
+### C++ Implementation
 
-Now that our synchronization mechanism is working, we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
+Starting from the single element channel in our [part 1]({% post_url 2020-06-28-go-channels-part1 %}) of this series,  we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
 
 we replace the `m_val` and `m_has_value` variables with a single data structure `m_data` of type `std::deque<T>`.
 
