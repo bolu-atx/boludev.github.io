@@ -20,7 +20,7 @@ Well designed, large scale complex concurrent systems are often built from a few
 ## Buffered Channels
 
 ### Go Example - A Buffered Channel
-From [part 1]({% post_url 2020-06-28-go-channels-part1 %}), we know that if a sender/receiver is not paired together, the channel send/receive operations will never take place. As a result, if we run the following code, Go's deadlock detector will detect a panic and crash immediately.
+From [part 1]({% post_url 2020-06-28-go-channels-part1 %}), we know that if a sender/receiver is not paired together, the channel send/receive will block indefinitely. As a result, if we run the following code, we should get a deadlock panic.
 
 ```go
 package main
@@ -50,27 +50,26 @@ main.main()
 exit status 2
 ```
 
-
- To make this code work, we need to make this a **buffered** channel. Buffered channel have asynchronous send, and therefore can be executed without having a listener on the other side. To make a buffered channel, we simply specify the channel capacity as the 2nd argument when constructing the channel.
+ To fix this, the blocking behavior on send needs to be changed to non-blocking. **Buffered** channel offers this. When a buffered channel has free capacity, the sends are asynchronous and does not require an active receiver on the channel.  To make a buffered channel, we provide a second argument of channel capacity when constructing the channel.
 
 ```go
     queue := make(chan string, 2)
 ```
 
-With this fix, we see the correct behavior
+With a buffered channel, the deadlock code no longer panics
 ```
 ▶ go run deadlock_1thread.go
 one
 two
 ```
 
-- In this example, we made a channel with a fixed size of 2
-- We also called `close` on the channel, otherwise, the `for` loop in the main thread receiving the channel messages will loop over the existing results, and then block indefinitely waiting for the 3rd item (which will never come).
-
+Receive on a buffered channel behaves similar to a normal channel. If there are no items in the channel currently, the receive operation will block until something is available.
 
 ### C++ Implementation
 
-Starting from the single element channel in our [part 1]({% post_url 2020-06-28-go-channels-part1 %}) of this series,  we can add more machinery to support multiple values by storing the messages in a queue via `std::deque<T>`:
+With that brief introduction, let's return to C++ land to see what changes we need to make to implement similar behaviors.
+
+Starting from the single element channel in our [part 1]({% post_url 2020-06-28-go-channels-part1 %}) of this series,  it is quite simple to support buffered channels by storing the elements in a STL container such as a double-ended queue via `std::deque<T>`:
 
 we replace the `m_val` and `m_has_value` variables with a single data structure `m_data` of type `std::deque<T>`.
 
@@ -81,7 +80,7 @@ protected:
     std::condition_variable m_cv;
 ```
 
-Turned out, with this change, our send/receive logic also simplifies quite a bit - since we no longer need to use a condition variable to check to ensure there is a spot available in the channel to avoid overwriting a previously un-seen message. Also note, we added a function `empty()` to return whether there is any data in the queue.
+Turned out, with this change, our send/receive logic also simplifies quite a bit - since we no longer need to use condition variable and extra flags to ensure that there is a proper sender/receiver pairing. Also note, we added a function `empty()` to return whether there is any data in the queue.
 
 ```cpp
 T receive_blocking()
@@ -191,7 +190,7 @@ protected:
 ```
 This version of the `Channel<T>` now allows us to `close()` the channel from either the sender or the receiver. If the channel is closed while another thread is waiting via `receive_blocking`, an exception will be thrown.
 
-Lastly, we need to add a clean-up clause in the destructor:
+Lastly, we need to add a clean-up clause in the destructor.
 
 ```cpp
     virtual ~Channel() {
