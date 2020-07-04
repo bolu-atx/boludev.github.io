@@ -50,7 +50,7 @@ main.main()
 exit status 2
 ```
 
- To fix this, the blocking behavior on send needs to be changed to non-blocking. **Buffered** channel offers this. When a buffered channel has free capacity, the sends are asynchronous and does not require an active receiver on the channel.  To make a buffered channel, we provide a second argument of channel capacity when constructing the channel.
+ To fix this, the blocking behavior on send needs to be changed to non-blocking. **Buffered** channel offers this. When a buffered channel has free capacity, the sends are asynchronous and returns right away, as it does not require an active receiver on the channel.  To make a buffered channel, we provide a second argument of channel capacity when constructing the channel.
 
 ```go
     queue := make(chan string, 2)
@@ -121,12 +121,13 @@ Main thread about to call receive on channel:
 Got:pong
 ```
 
-We got the desired behavior - the messages came in order (ping first, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. Now, let's finish the rest of the logic for completeness:
+We got the desired behavior - the messages came in order (ping first, pong second), in addition, if you pay attention, you will notice that the 2nd message was sent right away without waiting for the first message to be withdraw. 
+
+To ensure the channel is open at the point of send/receive, we need to add a boolean to track the channel open/closed state.
+
+Currently, our buffered channel work do not have a capacity constraint.
 
 ```cpp
-//
-// Created by Bo Lu on 6/28/20.
-//
 #pragma once
 #include <mutex>
 #include <condition_variable>
