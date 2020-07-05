@@ -233,7 +233,52 @@ With these changes (and the return of the `cv.wait` on the `send`), there are no
 
 In this diagram, we can see that the send/receive have very similar control flow, but ultimately, it either results in an success or an error.
 
+### Final Test
+
+With the above capacity, open/close changes, here's a final test of the buffered channel where we send 8 items through a channel with a capcity of 3, we also add a 2s delay on the 4th item to test the synchronization. The output of this test is below:
+```
+Channel created.
+Buffered channel constructed (3)
+main thread: calling receive:
+send thread: sending ping 0
+send thread: sending ping 0 done
+send thread: sending ping 1
+send thread: sending ping 1 done
+send thread: sending ping 2
+send thread: sending ping 2 done
+send thread: sending ping 3
+send thread: sending ping 3 done
+send thread: sending ping 4
+main thread: received ping 0
+main thread: calling receive:
+main thread: received ping 1
+main thread: calling receive:
+main thread: received ping 2
+main thread: calling receive:
+main thread: received ping 3
+main thread: calling receive:
+send thread: sending ping 4 done
+send thread: sending ping 5
+send thread: sending ping 5 done
+send thread: sending ping 6
+send thread: sending ping 6 done
+send thread: sending ping 7
+send thread: sending ping 7 done
+send thread took 2 s.
+main thread: received ping 4
+main thread: calling receive:
+main thread: received ping 5
+main thread: calling receive:
+main thread: received ping 6
+main thread: calling receive:
+main thread: received ping 7
+```
+
+Note on the **ping 4**, we added a 2s delay, during that time, the main thread receiving the messages caught up and then waited for the pings, exactly as we designed.
+
 ## Extra Embellishments
+The basic functionality of a buffered channel is now in place, but we definitely still have plenty of rooms to improve.
+
 ### Looping over the channel
 
 in Go, it is very conveinient to setup a loop as a sink to some data being fed asynchronous into a channel as such:
@@ -260,6 +305,8 @@ while (channel.is_open())
     }
 }
 ```
+Although this is not as terse as the Go option, I felt leaving this loop behavior in this state is a good trade-off between ease-of-use and code complexity, we can maybe make a special iterator that terminates in some special way by hacking the `begin()` and `end()` implementation, but that seems too much of a deviation from what we are trying to do here.
+
 ### Combining Default Channel with Buffered Channel
 
 If you have noticed, the simple channel in [part 1]({% post_url 2020-06-28-go-channels-part1 %}) has different send/receive logic than the buffered channel we just built.
