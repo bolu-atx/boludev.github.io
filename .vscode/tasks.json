@@ -6,7 +6,7 @@
         {
             "label": "Run Jekyll Serve",
             "type": "shell",
-            "command": "jekyll serve --drafts",
+            "command": "jekyll serve --drafts --future",
             "problemMatcher": [],
             "group": {
                 "kind": "test",
