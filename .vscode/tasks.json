@@ -9,7 +9,7 @@
             "command": "jekyll serve --drafts",
             "problemMatcher": [],
             "group": {
-                "kind": "build",
+                "kind": "test",
                 "isDefault": true
             }
         }
