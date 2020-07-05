@@ -13,6 +13,8 @@ Part one of this series, where we built a simple Go channel with similar synchro
 
 Buffered channels are desirable in many parallel applications such as work queues, worker/thread pools, MCMP (multiple consumers/producers) patterns.
 
+<!--more-->
+
 Well designed, large scale complex concurrent systems are often built from a few fairly simple building blocks such as buffered channels. Even though these buffered channels are still constructed the same way in Go, they are actually entirely different in behavior from simple channels, and really behave differently. The objective for buffered channel is less so of synchronization, but more to deal with non-deterministic input/output "flow rate" into a system. As a result, in buffered channels, send/receive operations are non-blocking provided there is capacity in the channel. In addition, they have storage, whereas simple channel is more of a "pass-through" entity.
 
 <img src="/assets/posts-media/go-channel.png" />

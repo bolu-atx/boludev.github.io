@@ -16,7 +16,7 @@ url: "http://bolu.dev" # the base hostname & protocol for your site
 twitter_username: blu3ness
 github_username:  bolu-atx
 linkedin_username: iambolu
-
 # Build settings
 markdown: kramdown
 syntax_highlighter: rouge
+excerpt_separator: <!--more-->

@@ -16,6 +16,8 @@ After various attempts to use Wordpress, Vue, React, I've decided to just switch
 
 The main advantage of moving to Github pages is the ease of setup and migration should I need to do so in the future. There's no database, almost no-setup, and I can make use of standard git workflows. The posts are in markdown so I can work on it piece-meal whenever I want. Looking forward to see if this motivates me to write more.
 
+<!--more-->
+
 ### On setting up WSL2
 
 It was pretty painful to setup Jekyll on WSL2 (Ubuntu 18.04 LTS) - mainly due to WSL2 by default adds all the Windows paths into the WSL2 PATH and the fact that all directories on `/mnt/C` are too permissive `0777`.

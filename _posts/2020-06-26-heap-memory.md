@@ -10,6 +10,8 @@ Heap memory allocation via `new` and `delete` (or `malloc` or `free` for C) are 
 
 This is because there are actually two different types of memory allocation happening behind a `malloc/new` call. The first type, reserved usually for smaller allocations (less than 100 kb) uses `sbrk()`, which is a traditional way of allocating memory in UNIX -- it just expands the data area by a given amount. The second type uses `mmap()` to allocate memory for larger chunks of memory. `mmap()` allows you to allocate independent regions of memory without being restricted to a single contiguous chunk of virtual address space. A memory mapped region obtained through `mmap()` upon unmapping will immediately release the memory back to the OS, whereas `sbrk()` will keep the released memory within the process for future allocations.
 
+<!--more-->
+
 I won't get into the details of custom-built memory allocators such as jemalloc or tcmalloc; they are a fascinating topic on their own. Here the problem I wanted to investigate is how do I get the behavior I wanted using default glibc allocators. I wrote a little test program helped me to test the memory allocation behavior on CentOS7 linux with GCC 4.8.5 compiler:
 
 ```cpp

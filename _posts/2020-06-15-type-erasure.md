@@ -13,6 +13,8 @@ One issue I recently ran into while working with templates is the following:
 
 Suppose I have a generic class `Foo<T>` that takes a template argument, I need to place `Foo<T>` in a container to be iterated upon or to be looked up later.  However, I might have multiple instantiations of `Foo<T>` of different types (i.e. `int, float, double, bool`), this makes it hard to use STL containers since these containers require the elements to be of a single type.
 
+<!--more-->
+
 After scouring the internet, I found that cplusplus.com article here (https://www.cplusplus.com/articles/oz18T05o/) was really insightful. I decided to update this article for my own interpretation.
 
 ## Classic Inheritence Approach

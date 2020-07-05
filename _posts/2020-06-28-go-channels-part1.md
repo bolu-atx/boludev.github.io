@@ -13,6 +13,7 @@ You can send values into channels from one goroutine and receive those values in
 Having channels have made writing multi-threaded concurrent programs really simple in Go. 
 In this series, I wanted to see if it's possible to re-create it in cpp.
 
+<!--more-->
 
 Before I start, I wanted to just mention there are already plenty of amazing cpp libraries out there that recreates Go channels, such as:
 

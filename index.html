@@ -13,7 +13,7 @@ layout: default
           <a class="post-link" href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
         </h2>
         <div class="post-preview">
-          {{ post.content | truncatewords:100}}
+          {{ post.excerpt }}
           <br><br>
             <a href="{{ post.url }}">Read more...</a><br><br>
         </div>
