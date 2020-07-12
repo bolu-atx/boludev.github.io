@@ -8,6 +8,7 @@ Here's a small selection of my photography work. You can find more on my [Flickr
 
 I shoot with a Sony A7 RII, my lenses include:
 
+- Canon 24-70 f2.8 II L
 - Canon 16-35 f4 L
 - Canon 70-200 f4 L
 - Samyang 35mm f1.4L for Sony EF
