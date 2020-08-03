@@ -1,11 +1,12 @@
 ---
 layout: post
-title:  ""Abstraction All the Way Down
-date:   2020-07-08 15:06:06 -0700
+title:  "Abstraction All the Way Down"
+date:   2020-08-01 15:06:06 -0700
 tags: blog
 author: bolu-atx
 categories: programming
 ---
+
 Programming or any problem solving skill is really all about distilling complex problems into simpler abstractions.  The art of creating elegant abstractions is a skill that developers must acquire on their journey to master software craftsmanship. Terse abstractions that fully describes a problem helps reduce cognitive burden, allowing the developer to focus on what really matters in the code. 
 
 <!--more-->
