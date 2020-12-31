@@ -20,3 +20,8 @@ linkedin_username: iambolu
 markdown: kramdown
 syntax_highlighter: rouge
 excerpt_separator: <!--more-->
+kramdown:
+  input: GFM
+  syntax_highlighter_opts:
+    default_lang: html
+    css_class   : 'highlight'
