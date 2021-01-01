@@ -10,22 +10,21 @@ $base-font-weight: 400;
 $small-font-size:  $base-font-size * 0.875;
 $base-line-height: 1.5;
 
-$spacing-unit:     30px;
+$spacing-unit:     20px;
 
 $text-color:       #111;
 $background-color: #fafafa;
-$brand-color:      #1664b7;
+$brand-color:      #29517c;
 
-$grey-color:       #828282;
-$grey-color-light: lighten($grey-color, 40%);
+$grey-color:       #939393;
+$grey-color-light: lighten($grey-color, 30%);
 $grey-color-dark:  darken($grey-color, 25%);
 
 // Width of the content area
-$content-width:    1000px;
+$content-width:    900px;
 
 $on-palm:          600px;
-$on-laptop:        1000px;
-
+$on-laptop:        9000px;
 
 
 // Use media queries like this:
