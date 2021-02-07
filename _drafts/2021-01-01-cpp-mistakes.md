@@ -13,8 +13,6 @@ Internet consensus tends to label C++ as a hard language; I like to think Cpp is
 
 Callbacks (lambda functions, function pointers, functors, or `std::bind` on static functions) are a common paradigm when you work with message queues, thread pools, or event based systems. Lambda and closures give you a lot of power - but too much power could often cause problems, consider the following code:
 
-Example:
-
 ```cpp
 #include <iostream>
 #include <functional>
@@ -40,30 +38,96 @@ int main()
 }
 ```
 
-This code is syntatically correct, it will compile (on C++11 or newer), and in debug mode, you will even get the expected result. But is it correct?
-
-The answer is obviously.. No, it's not correct! Can you see what's wrong with it?
+This code is syntatically correct, it will compile (on C++11 or newer), and in debug mode, you will even get the expected result. 
 
 ```
 lambda callback                                                                                                                            
 value is 3                                                           
 ```
 
-the `get_callback` method would return a lambda function that make use of `some_val` inside the scope of the lambda function generator method. However, this code could have *undefined* behavior depending on the compiler and the build mode (release vs debug) of your code since the compiler doesn't need to make any guarantee of the lifetime of the referrenced variable.
+But is it correct? The answer is obviously.. No, it's not correct! Can you see what's wrong with it?
+
+the `get_callback` method here returns a lambda function that captures the `some_val` by reference. Which will be pop-offed the stack of the `get_callback` once it completes execution. As a result, this code has *undefined* behavior depending on the compiler and the build mode (release vs debug) of your code.
+
+You will be surprised how often this happens in large callback functions or threadpools where there are multiple things in flight with limited apriori information on the life-time of these objects.
 
 How to solve this? use capture by value on light-weight objects, and wrap heavy objects with a `shared_ptr` and then explicitly capture the pointer by value to make sure the reference count on the object gets properly incremented.
 
-
 ### 2. Modifying an iterable data structure during iteration
 
+Say you have an collection of data in an unordered map (could be a bunch of buffers, or a bunch of objects), being a good programmer, you want to iterate over this map but do a bunch of actions at once instead of iterating over it multiple times, you write the following loop:
+
+```cpp
+
+std::unordered_map<ktype, val>::iterator itr = items.begin();
+std::unordered_map<ktype, val>::iterator end = items.end();
+
+for (;itr!=end;++itr)
+{
+    if condition_check(*itr)
+    {
+        //do stuff
+    }
+    else {
+        // delete stuff
+        items.erase(itr);
+    }
+}
+```
+
+Will this compile? Yes!  Will this work? No!
+
+What's wrong with it? Well, the `erase` method, as defined by `std::unordered_map` will invalidate all iterators, pointers when called. As a result, you will be incremeting a nullptr in the next iteration of the data.
+
+This one is not too bad - if you are good at writing unit tests, you should catch this fairly quickly - since it tends to lead to segfaults of your program.
+
+A more sinister analog of this iteration issue could arise if you work with custom data structures and tries to iterate over a bunch of identically sized structures in one loop to be efficient, something like this:
+
+```cpp
+ASSERT(customStructure.size() == vecB.size())
+
+for (size_t i = 0; i < listA.size(); ++i)
+{
+    if (vecB[i].condition_fn_check())
+    {
+        customStructure.remove(i); 
+        // BAD - i is no longer synchronized
+        // If there's no bound check on the index operator for customStructure
+        // this will result in undefined behavior!!
+    }
+}
+
+```
 
 ### 3. Use `size_t` in a data structure definition
+
+When communicating with other programs, clients, servers, or file system, we often need to define a structure with a relatively straight forward memory layout to facilitate data serialization / deserialization / io.
+
+```cpp
+#pragma pack
+struct DataSpec {
+    uint8_t version;
+    char[256] description;
+    size_t element_count;
+    uint8_t per_element_bytes;
+}    
+
+    
+public:
+    DataSpec() {}
+
+}
+```
 
 
 ### 4. `pragma pack` and then forgot to unpack
 
+See [GNU compiler documentation on pragma packing][1]
 
 ### 5. Throwing an exception in the destructor
 
 
 ### 6. Implicit mutexes in multi-threaded programs
+
+
+[1]:https://gcc.gnu.org/onlinedocs/gcc-4.4.4/gcc/Structure_002dPacking-Pragmas.html
