@@ -8,7 +8,7 @@ categories: blog cpp programming
 ---
 
 Internet consensus tends to label C++ as a hard language; I like to think Cpp is a "deep" language. There are always rooms for improvement - doesn't matter how long you have been coding in C++. The expressiveness and the depth of the language is double-edged. It is what makes C++ great, but also makes it daunting for new users. These are the mistakes I've made in my daily usage of C++. I hope they can be useful for other people to avoid them in the future.
-
+<!--more-->
 ### 1. Capture by reference on transient objects
 
 Callbacks (lambda functions, function pointers, functors, or `std::bind` on static functions) are a common paradigm when you work with message queues, thread pools, or event based systems. Lambda and closures give you a lot of power - but too much power could often cause problems, consider the following code:
@@ -45,7 +45,7 @@ lambda callback
 value is 3                                                           
 ```
 
-But is it correct? The answer is obviously.. No, it's not correct! Can you see what's wrong with it?
+But is it correct? The answer is obviously.. No, it's not correct 🙅‍♂️! Can you see what's wrong with it?
 
 the `get_callback` method here returns a lambda function that captures the `some_val` by reference. Which will be pop-offed the stack of the `get_callback` once it completes execution. As a result, this code has *undefined* behavior depending on the compiler and the build mode (release vs debug) of your code.
 
@@ -99,32 +99,47 @@ for (size_t i = 0; i < listA.size(); ++i)
 
 ```
 
-### 3. Use `size_t` in a data structure definition
+### 3. Use `size_t` in a IO/serialized struct definition
 
-When communicating with other programs, clients, servers, or file system, we often need to define a structure with a relatively straight forward memory layout to facilitate data serialization / deserialization / io.
+When communicating with other programs, clients, servers, or file system, we often need to define a import/export data structure with a simple memory layout to make it easy to pack the data, for example:
 
 ```cpp
 #pragma pack
-struct DataSpec {
+struct DataSpecHeader {
     uint8_t version;
     char[256] description;
     size_t element_count;
     uint8_t per_element_bytes;
 }    
 
-    
-public:
-    DataSpec() {}
+// Skipped DataSpecBody here since it is variable lengthed, could be a pointer or a std::vec or some other type
 
+struct DataSpecFooter {
+    size_t bytes_written;
+    size_t checksum;
 }
 ```
 
+
+This then allows you to define some method such as `DataSpecHeader get_header_serialization(const obj_t& obj)` to map the data members of your object to the struct defined above; when it's time to export the data, you can use it to directly write to a binary stream by `ostream.write(reinterpret_cast<char*>(data_spec_header),sizeof(data_spec_header)` in one call. I use this pattern a lot; is my preferred way of turning C++ data into bits.
+
+This will work fine on your development machine, or even your production environment, great! Now you can move onto other things.
+
+Is this correct? 
+
+Well, by now you should know the answer to that question 😄, no, it's not correct 🙅‍♂️! What's wrong with it? Well.. `size_t` is a platform-dependent type defined for conveinience - on 32 bit x86 platforms, it is mapped to `uint32_t`, while on 64 bit platforms, it is mapped to `uint64_t`. However, it can also take on many other types depenending on where you are running the code (i.e. embedded devices, ARM, docker, etc). As a result, you are introducing another layer of variability into a format specification that is supposed to be **static**. At a minimum, this would cause data corruptions and errors in serialization down the line or when you communicate with another program / client that is still running on 32 bit or embedded device.
+
+
+The fix? Use standard sized types that are unlikely to change in the near future. I am expecially a fan of `uint8_t, uint16_t, uint32_t, int64_t` type of notation - since it is very explicit on how many bits of memory it occupies.
 
 ### 4. `pragma pack` and then forgot to unpack
 
 See [GNU compiler documentation on pragma packing][1]
 
 ### 5. Throwing an exception in the destructor
+
+https://akrzemi1.wordpress.com/2011/09/21/destructors-that-throw/
+https://isocpp.org/wiki/faq/exceptions
 
 
 ### 6. Implicit mutexes in multi-threaded programs
