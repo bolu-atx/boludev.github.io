@@ -1,10 +1,10 @@
 ---
 layout: post
 title:  "Common, stupid, but non-obvious C++ mistakes I made"
-date:   2021-02-02 15:06:06 -0700
-tags: blog cpp programming
+date:   2021-02-06 15:06:06 -0700
+tags: cpp programming
 author: bolu-atx
-categories: blog cpp programming
+categories: cpp programming
 ---
 
 Internet consensus tends to label C++ as a hard language; I like to think Cpp is a "deep" language. There are always rooms for improvement - doesn't matter how long you have been coding in C++. The expressiveness and the depth of the language is double-edged. It is what makes C++ great, but also makes it daunting for new users. These are the mistakes I've made in my daily usage of C++. I hope they can be useful for other people to avoid them in the future.
