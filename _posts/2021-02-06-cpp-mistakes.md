@@ -179,5 +179,14 @@ The fix for this is obviously to limit the scope of the `#pragma pack` statement
 
 For details of `pragma pack` compiler directives, see [GNU compiler documentation on pragma packing][1]
 
+
+### Final Thoughts
+
+- Unlke rust, C++ design philosophy is less restrictive and pedantic about things you can do or cannot do. While this enables clever programmers to do some amazing tricks. The freedom also lends itself to shoot one's foot unintentionally.
+- When working in a team environment, we should really strive to improve the code clarity and follow consistent patterns and idioms of the language to minimize cognitive load in code reviews.
+- These gotchas that arises as part of in-depth debugging should be captured and archived in the team's wiki or other knowledge archiving systems to prevent them from being repeated in the future.
+
+
+
 [1]:https://gcc.gnu.org/onlinedocs/gcc-4.4.4/gcc/Structure_002dPacking-Pragmas.html
 [2]:https://stackoverflow.com/questions/3318410/pragma-pack-effect
