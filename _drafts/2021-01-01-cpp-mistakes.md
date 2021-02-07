@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Common C++ mistakes I made"
+title:  "Common, stupid, but non-obvious C++ mistakes I made"
 date:   2021-02-02 15:06:06 -0700
 tags: blog cpp programming
 author: bolu-atx
@@ -8,10 +8,12 @@ categories: blog cpp programming
 ---
 
 Internet consensus tends to label C++ as a hard language; I like to think Cpp is a "deep" language. There are always rooms for improvement - doesn't matter how long you have been coding in C++. The expressiveness and the depth of the language is double-edged. It is what makes C++ great, but also makes it daunting for new users. These are the mistakes I've made in my daily usage of C++. I hope they can be useful for other people to avoid them in the future.
-<!--more-->
+
 ### 1. Capture by reference on transient objects
 
 Callbacks (lambda functions, function pointers, functors, or `std::bind` on static functions) are a common paradigm when you work with message queues, thread pools, or event based systems. Lambda and closures give you a lot of power - but too much power could often cause problems, consider the following code:
+
+<!--more-->
 
 ```cpp
 #include <iostream>
@@ -59,8 +61,9 @@ Say you have an collection of data in an unordered map (could be a bunch of buff
 
 ```cpp
 
+// you can also do `auto` , but the explicit iterator type is provided to improve clarity
 std::unordered_map<ktype, val>::iterator itr = items.begin();
-std::unordered_map<ktype, val>::iterator end = items.end();
+const std::unordered_map<ktype, val>::iterator end = items.end();
 
 for (;itr!=end;++itr)
 {
@@ -96,8 +99,11 @@ for (size_t i = 0; i < listA.size(); ++i)
         // this will result in undefined behavior!!
     }
 }
-
 ```
+This is basically the same problem with iterators, but now you no longer have the C++ runtime libraries invalidating that pointer for you. The code will compile, it will run, but then you will get sneaky data inconsistencies and random behavior that will be hard to catch unless you are very rigorous with unit testing and integration testing.
+
+As a result, I am now very careful doing data structure mutations while iterating. In most cases, unless you are dealing with the tightest of tight loops, you don't need to squeeze that 1-2% efficiency. In those cases, just collect the things to be deleted in a separate STL container and then operate on the items to be deleted later all at once.
+
 
 ### 3. Use `size_t` in a IO/serialized struct definition
 
@@ -134,15 +140,44 @@ The fix? Use standard sized types that are unlikely to change in the near future
 
 ### 4. `pragma pack` and then forgot to unpack
 
-See [GNU compiler documentation on pragma packing][1]
+This is an extension of #3. As explained by this [StackOverflow post][2]:
 
-### 5. Throwing an exception in the destructor
+> `#pragma pack` instructs the compiler to pack structure members with particular alignment. Most compilers, when you declare a struct, will insert padding between members to ensure that they are aligned to appropriate addresses in memory (usually a multiple of the type's size). This avoids the performance penalty (or outright error) on some architectures associated with accessing variables that are not aligned properly.
 
-https://akrzemi1.wordpress.com/2011/09/21/destructors-that-throw/
-https://isocpp.org/wiki/faq/exceptions
+This is a common thing you will see before a IO/serializeable struct definition (like the exmaples #3). However, after the definition is complete, most cases people forget to do `#pragma pack(pop)` after the definition.  For example:
 
+```cpp
+#pragma pack(1)
 
-### 6. Implicit mutexes in multi-threaded programs
+struct ObjSerializableContainer {
+    uint8_t version;
+    // stuff
+}
 
+class ExportableModel : public IModel {
+public:
+    ExportableModel() {};
+    ~ExportableModel() {};
+
+    void exportObj(const std::string& path) {
+        // method that uses ObjSerializableContainer
+    }
+
+private:
+    size_t m_length;
+    // etc
+}
+```
+
+The side-effect of such action is that the compiler will treat all the struct and class definition after the point of the `pragma pack` statement to be following the same memory packing layout. 
+
+Is there anything wrong with this? No, on most standalone and small programs, it will run fine without any issues. You might see a slight performance drop in niche cases since the member are not cacheline friendly / memory alignment friendly, but the program will still give you the expected behavior.
+
+However, on larger projects, the packing could have unintended consequences. Since compilers compile each cpp file as a separate compliation unit, the effect of pragma packing will be applied to the compilation unit at the time of compilation. However, other components (static libs, or shared libs) of the same project might not be subjected to the same pragma packing directive. As a result, you might run into the same object definition across two components of a bigger project having different memory layout - causing random segmentation faults or crashes on the final linked together program!
+
+The fix for this is obviously to limit the scope of the `#pragma pack` statement to pieces of code that really needs it. Ideally, all data structure defintions that is meant to be shared across projects and modules should be refactored into a common header file. This way, the packing definition won't live in random cpp/header files that increases the likelihood of a mistake like this.
+
+For details of `pragma pack` compiler directives, see [GNU compiler documentation on pragma packing][1]
 
 [1]:https://gcc.gnu.org/onlinedocs/gcc-4.4.4/gcc/Structure_002dPacking-Pragmas.html
+[2]:https://stackoverflow.com/questions/3318410/pragma-pack-effect
