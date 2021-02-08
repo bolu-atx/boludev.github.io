@@ -236,12 +236,21 @@
 .pagination {
     text-align:center;
     margin:0 auto;
+    font-size:1.5rem;
 }
 .pagination .page_number {
     margin-right:2rem;
     margin-left:2rem;
-
+    color: $grey-color-dark;
+    font-size:0.8rem;
+    text-align:center;
+    vertical-align:middle;
 }
+
+.pagination span {
+    color: $grey-color;
+}
+
 
 .post-content {
     margin-bottom: $spacing-unit;
@@ -269,4 +278,8 @@
             font-size: 18px;
         }
     }
+}
+
+.post-preview-readmore {
+    float:right;
 }

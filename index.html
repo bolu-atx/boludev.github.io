@@ -17,8 +17,8 @@ layout: default
         </h2>
         <div class="post-preview">
           {{ post.excerpt }}
-          <br><br>
-            <a href="{{ post.url }}">Read more...</a><br><br>
+          <br>
+            <div class="post-preview-readmore"><a href="{{ post.url }}">Read more...</a></div>
         </div>
       </li>
     {% endfor %}
@@ -28,14 +28,18 @@ layout: default
 <div class="pagination">
   {% if paginator.previous_page %}
     <a href="{{ paginator.previous_page_path }}" class="previous">
-      Previous
+      ⇠
     </a>
+  {% else %}
+  <span>⇠</span>
   {% endif %}
   <span class="page_number ">
-    Page: {{ paginator.page }} of {{ paginator.total_pages }}
+    {{ paginator.page }} of {{ paginator.total_pages }}
   </span>
   {% if paginator.next_page %}
-    <a href="{{ paginator.next_page_path }}" class="next">Next</a>
+    <a href="{{ paginator.next_page_path }}" class="next">⇢</a>
+  {% else %}
+  <span>⇢</span>
   {% endif %}
 </div>
 
