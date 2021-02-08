@@ -16,6 +16,10 @@ url: "http://bolu.dev" # the base hostname & protocol for your site
 twitter_username: blu3ness
 github_username:  bolu-atx
 linkedin_username: iambolu
+
+# posts per page
+paginate: 10
+
 # Build settings
 markdown: kramdown
 syntax_highlighter: rouge
@@ -25,3 +29,5 @@ kramdown:
   syntax_highlighter_opts:
     default_lang: html
     css_class   : 'highlight'
+plugins:
+  - jekyll-paginate
