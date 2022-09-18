@@ -4,3 +4,4 @@ _site/*
 .git/*
 vendor/*
 .idea/*
+.bundle/*
