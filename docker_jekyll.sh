@@ -2,7 +2,7 @@
 
 export JEKYLL_VERSION=3.8
 
-which docker 2>&1 > /dev/null
+`which docker 2>&1 > /dev/null`
 if [[ $? -ne 0 ]]; then
   echo "No docker found. cannot continue"
 fi
