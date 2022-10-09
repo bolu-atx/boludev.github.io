@@ -9,7 +9,17 @@
             "command": "jekyll serve --drafts --future",
             "problemMatcher": [],
             "group": {
-                "kind": "test",
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+{
+            "label": "Run Jekyll in Docker",
+            "type": "shell",
+            "command": "./docker_jekyll.sh serve --drafts --future",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
                 "isDefault": true
             }
         }
