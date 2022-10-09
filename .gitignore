@@ -6,3 +6,7 @@ vendor/*
 .idea/*
 .bundle/*
 tag/*
+<<<<<<< HEAD
+=======
+.jekyll-metadata
+>>>>>>> master
