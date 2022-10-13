@@ -5,5 +5,4 @@ _site/*
 vendor/*
 .idea/*
 .bundle/*
-tag/*
 .jekyll-metadata
