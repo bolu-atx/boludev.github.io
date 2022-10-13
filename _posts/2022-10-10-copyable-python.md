@@ -19,6 +19,9 @@ This is a very simple explanation of how Python works. There are many more detai
 - What happens when you return a complex object (i.e. a class) as part of a tuple from a function?
 - What happens when you spin up a subprocess, call a method you defined in one class, and give it an object as an argument?
 
+<!--more-->
+
+
 ## Toy models:
 
 Let's create a super simple class that allows us to print the underlying ID (i.e. a pointer address kind of unique assignment for each object). 
