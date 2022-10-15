@@ -262,7 +262,6 @@ asyncio.run(main())
 >>> worker 0 has acquired the lock
 >>> worker 0 has released the lock
 ```
-```
 
 Note the `asyncio.Lock` implements `__aenter__` and `__aexit__` methods, so we can use it in a `with` statement. The `asyncio.Lock` class also implements the `locked` property, which can be used to check if the lock is currently acquired.
 
@@ -274,8 +273,6 @@ When an async task has the lock, even during an `await` context switch, the lock
 
 
 Semaphores are similar to locks, but they allow a limited number of tasks to acquire the lock. The `asyncio.Semaphore` class implements a semaphore.
-
-
 
 ```py
 import asyncio
@@ -304,3 +301,99 @@ asyncio.run(main())
 >>> worker 2 has released the semaphore
 ```
 
+
+### Async Events
+
+Analogous to condition variables in C++, the `asyncio.Event` allows tasks that require a certain condition to be satisfied from proceeding to wait until said condition is ready. The `asyncio.Event` class implements the `wait` and `set`, which is analogous to `wait` and `notify` in C++.
+
+```py
+import asyncio
+
+async def waiter(event):
+    print('waiting for it...')
+    await event.wait()
+    print('...got it!')
+
+async def main():
+    # Create an Event.
+    event = asyncio.Event()
+
+    # Spawn a Task to wait until 'event' is set.
+    await asyncio.gather(waiter(event), waiter(event), waiter(event))
+
+    # Sleep for 1 second and set the event.
+    await asyncio.sleep(1)
+    event.set()
+
+asyncio.run(main())
+```
+
+Note that an `event` can have multiple tasks waiting on it. When the event is set, all tasks waiting on the event are notified. (analogous to `cv.notify_all()` in C++)
+
+Events can be re-used, via the `clear()` method, which will block again until the event is set again.
+
+
+However, asyncio Event does not protect shared resources from concurrent access. It is only used to signal that a certain condition is ready. To enable shared resource conditional access, we can use a `asyncio.Condition` object. The `asyncio.Condition` class implements the `wait` and `notify` methods, which is analogous to `wait` and `notify` in C++.
+
+
+### Async Context Managers
+
+Context managers are a Python feature that allows us to define a block of code that will be executed before and after a block of code. A simple example would be the `asyncio.Lock` class implements the `__aenter__` and `__aexit__` methods. However, this pattern can be very powerful:
+
+```py
+async with RequestHandler(store_url) as handler:
+    async with handler.open_read(obj_id, config=config) as reader:
+        frames = await reader.read(720, count=480)
+
+        # Do other things using reader
+        ...
+
+    # Do other things using handler
+    ...
+...
+```
+
+This is almost identical to the synchronous `with` blocks, the small caveat is that the `__enter__` method of the async version can be `awaited`, so if some resource is IO bound or blocked for other reasons, the loop can do a context switch and work on other tasks until the resource is ready.
+
+
+Whew, this post is getting long, let's move onto the last topic we wanted to cover:
+
+### Async Error Handlers
+
+The `asyncio` module provides a way to register an error handler for all tasks. This is useful for logging errors, or for debugging purposes. The `asyncio` module provides the `set_exception_handler` function, which takes a callback function as an argument. The callback function will be called with the following arguments:
+
+
+```py
+import asyncio
+def exception_handler(loop : asyncio.AbstractEventLoop, context : dict):
+    msg = context.get('exception', context['message'])
+    print('Caught exception: {}'.format(msg))
+    print('Exception context: {}'.format(context))
+    print('Stop the event loop')
+    loop.stop()
+
+loop = asyncio.get_event_loop()
+loop.set_exception_handler(exception_handler)
+```
+To use a specific handler for only one task, we can use the `asyncio.Task.set_exception_handler` method. This method takes a callback function as an argument. The callback function will be called with the following arguments:
+
+```py
+import asyncio
+
+async def task_with_exception():
+    raise Exception('This exception is expected')
+
+async def main():
+    task = asyncio.create_task(task_with_exception())
+    task.set_exception_handler(lambda t, c: print('Caught exception: {}'.format(c['exception'])))
+    await task
+
+asyncio.run(main())
+
+>>> Caught exception: This exception is expected
+```
+
+
+Ok, I think that just about covered all the topic I wanted to go into for the part 2 of the series.
+
+In part 3, I will try to address some of the real life challenges of using `asyncio` in a fairly complex, multiprocess code-base. Including how to interface `asyncio` with other synchornous parts of the code-base, and how to use `asyncio` in a multi-process environment.
