@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Dependency injection in Python"
-date:   2022-09-17 9:06:06 -0700
+date:   2022-08-17 9:06:06 -0700
 tags: python programming
 author: bolu-atx
 categories: python programming

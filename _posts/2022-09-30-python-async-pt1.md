@@ -1,13 +1,19 @@
 ---
 layout: post
 title:  "Dive into Python asyncio - part 1"
-date:   2022-10-10 9:06:06 -0700
+date:   2022-09-30 9:06:06 -0700
 tags: python programming
 author: bolu-atx
 categories: python programming
 ---
 
 For as long as I have worked in Python land, I never had to touch the async part of the language. I know that `asyncio` library has gotten a lot of love in the past few years. Recently I've came across an opportunity to do a lot of IO and non-cpu bound work in Python. I decided to take a deep dive into the `asyncio` library and see what it has to offer.
+
+In part 1 of this series (I originally just wanted to write one post and realized the scope is way too big), we'll cover:
+
+- How async code interfaces with synchronous code in Python
+- How to convert synchronous code to asynchronous code, including how to prevent blocking of the event loop via custom `ThreadPoolExecutor`
+- How to use `asyncio` to run multiple tasks concurrently
 
 
 ### Basic example, async hello world
@@ -82,6 +88,8 @@ async def bar():
 
 asyncio.run(asyncio.gather(foo(), bar()))
 ```
+
+<!--more-->
 
 Above code will work exactly the same to the user as the previous example. The only difference is that the `foo` function is now synchronous. This is useful when you have a synchronous function that you want to run in parallel with an async function.
 

@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "What is copiable?"
-date:   2022-10-10 9:06:06 -0700
+date:   2022-09-01 9:06:06 -0700
 tags: python programming
 author: bolu-atx
 categories: python programming
