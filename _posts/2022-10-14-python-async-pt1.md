@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Dive into Python asyncio - part 1"
-date:   2022-10-10 9:06:06 -0700
+date:   2022-10-14 9:06:06 -0700
 tags: python programming
 author: bolu-atx
 categories: python programming
@@ -82,6 +82,8 @@ async def bar():
 
 asyncio.run(asyncio.gather(foo(), bar()))
 ```
+
+<!--more-->
 
 Above code will work exactly the same to the user as the previous example. The only difference is that the `foo` function is now synchronous. This is useful when you have a synchronous function that you want to run in parallel with an async function.
 
