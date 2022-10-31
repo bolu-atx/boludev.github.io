@@ -8,8 +8,6 @@ categories: python programming
 ---
 
 
-
-
 In the second part of this series on deep diving into `asyncio` and `async/await` in Python, we will be looking at the following topics:
 
 - task, task groups, task cancellation
@@ -378,6 +376,7 @@ def exception_handler(loop : asyncio.AbstractEventLoop, context : dict):
 loop = asyncio.get_event_loop()
 loop.set_exception_handler(exception_handler)
 ```
+
 To use a specific handler for only one task, we can use the `asyncio.Task.set_exception_handler` method. This method takes a callback function as an argument. The callback function will be called with the following arguments:
 
 ```py
