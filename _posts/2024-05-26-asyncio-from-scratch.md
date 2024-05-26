@@ -8,7 +8,7 @@ categories: python programming
 ---
 
 
-`asyncio` in Python is a library that provides a way to write concurrent code using the `async` and `await` syntax. It is built on top of the `asyncio` event loop, which is a single-threaded event loop that runs tasks concurrently. In this post, we will explore how `asyncio` works from scratch by implementing our own event loop runtime.
+`asyncio` in Python is a library that provides a way to write concurrent code using the `async` and `await` syntax. It is built on top of the `asyncio` event loop, which is a single-threaded event loop that runs tasks concurrently. Inspired by a similar post by [Jacob](https://jacobpadilla.com/articles/recreating-asyncio), we will explore how `asyncio` works from scratch by implementing our own event loop runtime with Python generators.
 
 <!--more-->
 
@@ -92,6 +92,37 @@ c.send(2)
 # >  received value: 2
 
 ```
+
+### Returning values from a coroutine in Python
+
+Typically values are "yielded" to the caller via the `yield` keyword. However, you can also return using the `return` keyword just like a regular function. However, the return value is wrapped in a `StopIteration` exception. For example:
+
+
+```python
+def corou():
+	print("coroutine started")
+	while value := yield:
+		print(f"received value: {value}")
+	return "done"
+```
+
+If we run this coroutine, we would see:
+
+```python
+c = corou()
+next(c)
+c.send(1)
+c.send(2)
+c.send(None)
+
+# we would see
+# >  coroutine started
+# >  received value: 1
+# >  received value: 2
+# >  StopIteration: done
+```
+
+
 
 
 
@@ -187,18 +218,32 @@ Since we cannot give `__await__` to a function, we need to create a class to enc
 
 ```python
 
+event_loop = Queue()
+
 class Task:
 	def __init__(self, coro):
 		self.coro = coro
 		self.finished = False
+		self.res = None
 
 	def done(self):
 		return self.finished
+
+	def result(self):
+		return self.res
 
 	def __await__(self):
 		while not self.done():
 			yield self
 
+		return self.result()
+
+	@staticmethod
+	def new(coro : Generator) -> Task:
+		"""Create a new task from a coroutine"""
+		task = Task(coro)
+		event_loop.put(Task(coro))
+		return task
 ```
 
 When we call `await` on an instance of the `Task`, it will yield until someone else sets the `finished` state to `True`. 
@@ -216,8 +261,9 @@ def run(main: Generator) -> None:
 		try:
 			# wakes up the task and runs until the next yield
 			task.coro.send(None)
-		except StopIteration:
+		except StopIteration as e:
 			task.finished = True
+			task.res = e.value
 		else:
 			event_loop.put(task)
 ```
@@ -228,5 +274,135 @@ This code looks more complex now, let's break it down:
 - We have a `run` function that takes a generator and puts it in the queue
 - We then run the event loop until the queue is empty
 - We then get the task from the queue and run it until the next `yield` statement
-- If the task is done, we set the `finished` flag to `True`
+- If the task is done, we set the `finished` flag to `True`, we also extract the StopIteration value and set it to the `result` field of the task
 - If the task is not done, we put it back in the queue so it can be run again
+
+
+With this `run` method, we can now run our tasks with the `await` keyword. For example:
+
+```python
+def _sleep(seconds : float) -> None:
+    start_time = time.time()
+    while time.time() - start_time < seconds:
+        yield
+
+async def sleep(seconds : float):
+    task = Task.new(_sleep(seconds))
+    return await task
+```
+
+## Putting it all together
+
+Putting it all together, we now have the following:
+
+```python
+from queue import Queue
+from typing import Generator
+import time
+
+
+event_loop = Queue()
+
+
+class Task:
+	def __init__(self, coro):
+		self.coro = coro
+		self.finished = False
+		self.res = None
+
+	def __repr__(self) -> str:
+		return f"{self.coro}, finished {self.finished}, res : {self.res}"
+
+	def done(self):
+		return self.finished
+
+	def result(self):
+		return self.res
+
+	def __await__(self):
+		while not self.done():
+			yield self
+
+		return self.result()
+
+	@staticmethod
+	def new(coro) -> 'Task':
+		"""Create a new task from a coroutine"""
+		task = Task(coro)
+		event_loop.put(task)
+		return task
+
+def run(main: Generator) -> None:
+	event_loop.put(Task(main))
+	while not event_loop.empty():
+		task = event_loop.get()
+		# print(f"Running task {task}")
+		try:
+			# wakes up the task and runs until the next yield
+			task.coro.send(None)
+		except StopIteration as e:
+			task.finished = True
+			task.res = e.value
+		else:
+			event_loop.put(task)
+
+
+def _sleep(seconds : float):
+	start_time = time.time()
+	while (time.time() - start_time) < seconds:
+		yield
+
+	return time.time() - start_time
+
+async def sleep(seconds : float) -> None:
+	task = Task.new(_sleep(seconds))
+	return await task
+
+async def task1():
+	for _ in range(2):
+		print('Task 1')
+		await sleep(1)
+
+async def task2():
+	for _ in range(3):
+		print('Task 2')
+		await sleep(2)
+
+async def main():
+	one = Task.new(task1())
+	two = Task.new(task2())
+	await one
+	await two
+	print("done")
+
+if __name__ == '__main__':
+	run(main())
+
+```
+If we run this code, we will see the following:
+
+```
+~/Tmp » python coro.py                                                                                                                                                                                                                                                                                                                                             146 ↵ bolu@BobookAir
+Task 1
+Task 2
+Task 1
+Task 2
+Task 2
+done
+```
+
+
+You will notice that there are some commented out `print` in the code, if we uncomment them, we'll see the context switches in action on the event loop:
+
+```
+Running task <coroutine object task2 at 0x102ab82b0>, finished False, res : None
+Running task <coroutine object main at 0x102827920>, finished False, res : None
+Running task <generator object _sleep at 0x10284af80>, finished False, res : None
+Running task <coroutine object task2 at 0x102ab82b0>, finished False, res : None
+Running task <coroutine object main at 0x102827920>, finished False, res : None
+Running task <generator object _sleep at 0x10284af80>, finished False, res : None
+Running task <coroutine object task2 at 0x102ab82b0>, finished False, res : None
+Running task <coroutine object main at 0x102827920>, finished False, res : None
+```
+
+If you got this far, I hope you have enjoyed the post. Albeit being simple (we didn't even do any epoll / io_uring or any kind of OS level IO event integration), this taught me a lot about how asyncio works behind the scenes. It is obviously not as efficient as the C implementation and would not survive any production load, but the mental model is there. I hope you enjoyed this post as much as I did writing it. 
