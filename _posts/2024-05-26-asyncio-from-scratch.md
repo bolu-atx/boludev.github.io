@@ -23,15 +23,15 @@ Most people are familiar with generators that `yield` something and then we can 
 
 ```python
 def iterable_dirs(regex  : str) -> Iterable[str]:
-	"""Iterates over directories that match the regex"""
-	for root, dirs, files in os.walk('.'):
-		for dir in dirs:
-			if re.match(regex, dir):
-				yield os.path.join(root, dir)
+  """Iterates over directories that match the regex"""
+  for root, dirs, files in os.walk('.'):
+    for dir in dirs:
+      if re.match(regex, dir):
+        yield os.path.join(root, dir)
 
 # to use this
 for dir in iterable_dirs(r'^[a-z]'):
-	print(dir)
+  print(dir)
 
 ```
 
@@ -41,10 +41,10 @@ However, yield can also be used to communicate with the caller. For example, we 
 
 ```python
 def coroutine():
-	print("coroutine started")
-	while True:
-		value = yield
-		print(f"received value: {value}")
+  print("coroutine started")
+  while True:
+    value = yield
+    print(f"received value: {value}")
 
 # to use this
 c = coroutine()
@@ -66,16 +66,16 @@ We can also use `yield from` to delegate to another coroutine. This is useful wh
 
 ```python
 def coroutine():
-	print("coroutine started")
-	while True:
-		value = yield from sub_coroutine()
-		print(f"received value: {value}")
+  print("coroutine started")
+  while True:
+    value = yield from sub_coroutine()
+    print(f"received value: {value}")
 
 def sub_coroutine():
-	print("sub coroutine started")
-	while True:
-		value = yield
-		print(f"sub coroutine received value: {value}")
+  print("sub coroutine started")
+  while True:
+    value = yield
+    print(f"sub coroutine received value: {value}")
 
 # to use this
 c = coroutine()
@@ -100,10 +100,10 @@ Typically values are "yielded" to the caller via the `yield` keyword. However, y
 
 ```python
 def corou():
-	print("coroutine started")
-	while value := yield:
-		print(f"received value: {value}")
-	return "done"
+  print("coroutine started")
+  while value := yield:
+    print(f"received value: {value}")
+  return "done"
 ```
 
 If we run this coroutine, we would see:
@@ -141,20 +141,20 @@ A simple example of the above concept can be illustrated below.
 
 ```python
 def task1():
-	while True:
-		print("task1")
-		yield
+  while True:
+    print("task1")
+    yield
 
 def task2():
-	while True:
-		print("task2")
-		yield
+  while True:
+    print("task2")
+    yield
 
 
 event_loop = [task1(), task2()]
 while True:
-	for task in event_loop:
-		next(task)
+  for task in event_loop:
+    next(task)
 ```
 
 Here we have a static event loop with only two tasks (not very useful in real life), but you can see how we can run the tasks concurrently. The `next(task)` call will run the task until the next `yield` statement and then move on to the next task. This is the basic idea behind the asyncio event loop.
@@ -169,27 +169,27 @@ Now let's see if we can impelment `asyncio.sleep` with coroutines. The idea here
 import time
 
 def sleep_async(seconds):
-	start = time.time()
-	while True:
-		if time.time() - start >= seconds:
-			return
-		yield
+  start = time.time()
+  while True:
+    if time.time() - start >= seconds:
+      return
+    yield
 
 def task1():
-	while True:
-		print("task1")
-		yield from sleep_async(1)
+  while True:
+    print("task1")
+    yield from sleep_async(1)
 
 def task2():
-	while True:
-		print("task2")
-		yield from sleep_async(2)
+  while True:
+    print("task2")
+    yield from sleep_async(2)
 
 
 event_loop = [task1(), task2()]
 while True:
-	for task in event_loop:
-		next(task)
+  for task in event_loop:
+    next(task)
 
 ```
 
@@ -206,12 +206,12 @@ This is an exampel of how `await` is implemented on `asyncio.Future`:
 
 ```python
 def __await__(self):
-	if not self.done():
-		self._asyncio_future_blocking = True
-		yield self
-	if not self.done():
-		raise RuntimeError("Event loop stopped before done")
-	return self.result()
+  if not self.done():
+    self._asyncio_future_blocking = True
+    yield self
+  if not self.done():
+    raise RuntimeError("Event loop stopped before done")
+  return self.result()
 ```
 
 Since we cannot give `__await__` to a function, we need to create a class to encapsulate the state of the coroutine. Let's create a simple `Task` wrapper for this:
@@ -221,29 +221,29 @@ Since we cannot give `__await__` to a function, we need to create a class to enc
 event_loop = Queue()
 
 class Task:
-	def __init__(self, coro):
-		self.coro = coro
-		self.finished = False
-		self.res = None
+  def __init__(self, coro):
+    self.coro = coro
+    self.finished = False
+    self.res = None
 
-	def done(self):
-		return self.finished
+  def done(self):
+    return self.finished
 
-	def result(self):
-		return self.res
+  def result(self):
+    return self.res
 
-	def __await__(self):
-		while not self.done():
-			yield self
+  def __await__(self):
+    while not self.done():
+      yield self
 
-		return self.result()
+    return self.result()
 
-	@staticmethod
-	def new(coro : Generator) -> Task:
-		"""Create a new task from a coroutine"""
-		task = Task(coro)
-		event_loop.put(Task(coro))
-		return task
+  @staticmethod
+  def new(coro : Generator) -> Task:
+    """Create a new task from a coroutine"""
+    task = Task(coro)
+    event_loop.put(Task(coro))
+    return task
 ```
 
 When we call `await` on an instance of the `Task`, it will yield until someone else sets the `finished` state to `True`. 
@@ -255,17 +255,17 @@ from queue import Queue
 event_loop = Queue()
 
 def run(main: Generator) -> None:
-	event_loop.put(Task(main))
-	while not event_loop.empty():
-		task = event_loop.get()
-		try:
-			# wakes up the task and runs until the next yield
-			task.coro.send(None)
-		except StopIteration as e:
-			task.finished = True
-			task.res = e.value
-		else:
-			event_loop.put(task)
+  event_loop.put(Task(main))
+  while not event_loop.empty():
+    task = event_loop.get()
+    try:
+      # wakes up the task and runs until the next yield
+      task.coro.send(None)
+    except StopIteration as e:
+      task.finished = True
+      task.res = e.value
+    else:
+      event_loop.put(task)
 ```
 
 This code looks more complex now, let's break it down:
@@ -305,78 +305,78 @@ event_loop = Queue()
 
 
 class Task:
-	def __init__(self, coro):
-		self.coro = coro
-		self.finished = False
-		self.res = None
+  def __init__(self, coro):
+    self.coro = coro
+    self.finished = False
+    self.res = None
 
-	def __repr__(self) -> str:
-		return f"{self.coro}, finished {self.finished}, res : {self.res}"
+  def __repr__(self) -> str:
+    return f"{self.coro}, finished {self.finished}, res : {self.res}"
 
-	def done(self):
-		return self.finished
+  def done(self):
+    return self.finished
 
-	def result(self):
-		return self.res
+  def result(self):
+    return self.res
 
-	def __await__(self):
-		while not self.done():
-			yield self
+  def __await__(self):
+    while not self.done():
+      yield self
 
-		return self.result()
+    return self.result()
 
-	@staticmethod
-	def new(coro) -> 'Task':
-		"""Create a new task from a coroutine"""
-		task = Task(coro)
-		event_loop.put(task)
-		return task
+  @staticmethod
+  def new(coro) -> 'Task':
+    """Create a new task from a coroutine"""
+    task = Task(coro)
+    event_loop.put(task)
+    return task
 
 def run(main: Generator) -> None:
-	event_loop.put(Task(main))
-	while not event_loop.empty():
-		task = event_loop.get()
-		# print(f"Running task {task}")
-		try:
-			# wakes up the task and runs until the next yield
-			task.coro.send(None)
-		except StopIteration as e:
-			task.finished = True
-			task.res = e.value
-		else:
-			event_loop.put(task)
+  event_loop.put(Task(main))
+  while not event_loop.empty():
+    task = event_loop.get()
+    # print(f"Running task {task}")
+    try:
+      # wakes up the task and runs until the next yield
+      task.coro.send(None)
+    except StopIteration as e:
+      task.finished = True
+      task.res = e.value
+    else:
+      event_loop.put(task)
 
 
 def _sleep(seconds : float):
-	start_time = time.time()
-	while (time.time() - start_time) < seconds:
-		yield
+  start_time = time.time()
+  while (time.time() - start_time) < seconds:
+    yield
 
-	return time.time() - start_time
+  return time.time() - start_time
 
 async def sleep(seconds : float) -> None:
-	task = Task.new(_sleep(seconds))
-	return await task
+  task = Task.new(_sleep(seconds))
+  return await task
 
 async def task1():
-	for _ in range(2):
-		print('Task 1')
-		await sleep(1)
+  for _ in range(2):
+    print('Task 1')
+    await sleep(1)
 
 async def task2():
-	for _ in range(3):
-		print('Task 2')
-		await sleep(2)
+  for _ in range(3):
+    print('Task 2')
+    await sleep(2)
 
 async def main():
-	one = Task.new(task1())
-	two = Task.new(task2())
-	await one
-	await two
-	print("done")
+  one = Task.new(task1())
+  two = Task.new(task2())
+  await one
+  await two
+  print("done")
 
 if __name__ == '__main__':
-	run(main())
+  run(main())
 
 ```
 If we run this code, we will see the following:
