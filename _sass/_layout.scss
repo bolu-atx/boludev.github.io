@@ -57,16 +57,17 @@
 }
 
 .theme-toggle {
-    position:absolute;
+    position: absolute;
     right: 0;
     border: 0;
+    z-index: 1000;
 	padding: 0.5rem;
-    margin-right: 2rem;
     margin-top: 0.5rem;
     border-radius: 0.5rem;
 
     @include media-query($on-palm) {
-        right: 30px;
+        position: relative;
+        float: right;
     }
 
     &:hover {
@@ -82,6 +83,7 @@
 .site-nav {
     float: right;
     line-height: 56px;
+    margin-right:2.8rem;
 
     .menu-icon {
         display: none;
