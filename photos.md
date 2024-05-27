@@ -2,6 +2,7 @@
 layout: photo
 title: Photos
 permalink: /photos/
+icon: camera
 ---
 
 Here's a small selection of my photography work. You can find more on my [Flickr](https://www.flickr.com/photos/emo_nemo) or [500px](https://500px.com/blu3ness).

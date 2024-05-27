@@ -2,6 +2,7 @@
 layout: page
 title: About
 permalink: /about/
+icon: user
 ---
 
 <img class="profile-pic" src="/assets/images/avatar_small.jpg">

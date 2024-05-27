@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Common, stupid, but non-obvious C++ mistakes I made"
+title:  "Stack optimization for small sized objects in modern C++"
 date:   2023-05-01 15:06:06 -0700
 tags: cpp programming
 author: bolu-atx

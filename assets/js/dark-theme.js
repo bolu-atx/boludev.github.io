@@ -1,24 +1,30 @@
 function setTheme(theme) {
     document.getElementById('dark-theme-css').disabled = theme !== 'dark';
     localStorage.setItem('theme', theme);
+    // add .dark to all elements with the following classes and tags
+    const classes = ["site-title", "site-nav", "page-link", "site-header-bottom", "site-header", "menu-icon"];
+    const tags = ["a", "body"];
 
-    const classes = ["site-title", "site-nav", "page-link", "site-header-bottom", "site-header"];
     if (theme === 'dark') {
         classes.forEach(className => {
             const elements = document.getElementsByClassName(className);
             for (let i = 0; i < elements.length; i++) {
                 elements[i].classList.add('dark');
-                console.log("adding dark class to", elements[i])
             }
         });
+
+        tags.forEach(domType => {
+            const elements = document.getElementsByTagName(domType);
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].classList.add('dark');
+            }
+        })
     }
     else {
-        classes.forEach(className => {
-            const elements = document.getElementsByClassName(className);
-            for (let i = 0; i < elements.length; i++) {
-                elements[i].classList.remove('dark');
-            }
-        });
+        const elements = document.getElementsByClassName("dark");
+        for (let i = 0; i < elements.length; i++) {
+            elements[i].classList.remove('dark');
+        }
     }
 }
 
