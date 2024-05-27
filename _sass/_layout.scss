@@ -13,6 +13,10 @@
 .site-header-bottom {
     border: 0;
     border-bottom: 1px solid $grey-color-light;
+
+    &.dark {
+        border-bottom: 1px solid $grey-color-dark;
+    }
 }
 
 .site-title {
@@ -26,6 +30,9 @@
     &,
     &:visited {
         color: $grey-color-dark;
+    }
+    &.dark {
+        color: $grey-color-light;
     }
 }
 .post-comments {
@@ -60,12 +67,17 @@
         &:not(:last-child) {
             margin-right: 20px;
         }
+
+        &.dark {
+            color: $grey-color-light;
+        }
     }
+
 
     @include media-query($on-palm) {
         position: absolute;
         top: 9px;
-        right: $spacing-unit / 2;
+        right: calc($spacing-unit / 2);
         background-color: $background-color;
         border: 1px solid $grey-color-light;
         border-radius: 5px;
@@ -124,7 +136,7 @@
 
 .footer-heading {
     font-size: 18px;
-    margin-bottom: $spacing-unit / 2;
+    margin-bottom: calc($spacing-unit / 2);
 }
 
 .contact-list,
@@ -136,14 +148,14 @@
 .footer-col-wrapper {
     font-size: 15px;
     color: $grey-color;
-    margin-left: -$spacing-unit / 2;
+    margin-left: calc(-1 * $spacing-unit / 2);
     @extend %clearfix;
 }
 
 .footer-col {
     float: left;
-    margin-bottom: $spacing-unit / 2;
-    padding-left: $spacing-unit / 2;
+    margin-bottom: calc($spacing-unit / 2);
+    padding-left: calc($spacing-unit / 2);
 }
 
 .footer-col-1 {
@@ -282,4 +294,15 @@
 
 .post-preview-readmore {
     float:right;
+}
+
+.theme-toggle {
+    position: absolute;
+    right: 0;
+    border: 0;
+	padding: 6px;
+    margin-top: 0.6rem;
+    margin-right: 2rem;
+    // round corner
+    border-radius: 20%;
 }

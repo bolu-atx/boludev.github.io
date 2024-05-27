@@ -13,6 +13,8 @@ $base-line-height: 1.5;
 
 $spacing-unit:     20px;
 
+
+// light theme
 $text-color:       #111;
 $background-color: #fafafaeb;
 $brand-color:      #19497d;
@@ -20,6 +22,7 @@ $brand-color:      #19497d;
 $grey-color:       #939393;
 $grey-color-light: lighten($grey-color, 35%);
 $grey-color-dark:  darken($grey-color, 25%);
+
 
 // Width of the content area
 $content-width:    900px;
@@ -31,8 +34,8 @@ $on-laptop:        9000px;
 // Use media queries like this:
 // @include media-query($on-palm) {
 //     .wrapper {
-//         padding-right: $spacing-unit / 2;
-//         padding-left: $spacing-unit / 2;
+//         padding-right: calc($spacing-unit / 2);
+//         padding-left: calc($spacing-unit / 2);
 //     }
 // }
 @mixin media-query($device) {

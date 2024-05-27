@@ -31,3 +31,7 @@ kramdown:
     css_class   : 'highlight'
 plugins:
   - jekyll-paginate
+
+sass:
+  style: expanded
+  sourcemap: development
