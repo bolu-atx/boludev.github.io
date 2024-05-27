@@ -21,6 +21,8 @@ However, often the porting to C++ / Rust from existing application code do not h
 
 I've personally dealt with such systems where the GIL became a major bottleneck in the performance of the system due to ill-undertsanding of how it worked. As a result, I'm sharing my findings here.
 
+<!--more-->
+
 ## A simple problem to demonstrate GIL in C++
 
 In this toy example, we create an `expensive_cpp_func()` that gets bound as a python method via `pybind`, we run this function in a threadpool executor and measures its time to complete.
