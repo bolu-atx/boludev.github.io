@@ -23,7 +23,13 @@ body {
     -o-font-feature-settings: "kern" 1;
     font-feature-settings: "kern" 1;
     font-kerning: normal;
+
+    &.dark {
+        background-color: $background-color-dark;
+        color: $text-color-dark;
+    }
 }
+
 
 
 
@@ -102,7 +108,12 @@ a {
         color: $text-color;
         text-decoration: underline;
     }
+
+    &.dark {
+        color: lighten($brand-color, 30%)
+    }
 }
+
 
 
 
