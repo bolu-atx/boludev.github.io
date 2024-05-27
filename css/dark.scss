@@ -1,0 +1,16 @@
+// dark theme
+$dark-text-color:       #fafafa;
+$dark-background-color: #111;
+$dark-brand-color:      #19497d;
+
+$dark-grey-color:       #939393;
+$dark-grey-color-light: lighten($dark-grey-color, 35%);
+$dark-grey-color-dark:  darken($dark-grey-color, 25%);
+
+
+body {
+	color: $dark-text-color;
+	background-color: $dark-background-color;
+	margin: 0;
+	padding: 0;
+}
