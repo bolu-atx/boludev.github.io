@@ -69,6 +69,10 @@
         right: 30px;
     }
 
+    &:hover {
+        cursor: pointer;
+    }
+
     &.dark {
         background-color: #373737;
         color: #dadf7a;
