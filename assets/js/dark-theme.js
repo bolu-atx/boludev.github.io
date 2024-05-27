@@ -21,10 +21,19 @@ function setTheme(theme) {
         })
     }
     else {
-        const elements = document.getElementsByClassName("dark");
-        for (let i = 0; i < elements.length; i++) {
-            elements[i].classList.remove('dark');
-        }
+        classes.forEach(className => {
+            const elements = document.getElementsByClassName(className);
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].classList.remove('dark');
+            }
+        })
+
+        tags.forEach(tag => {
+            const elements = document.getElementsByTagName(tag);
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].classList.remove('dark');
+            }
+        })
     }
 }
 
