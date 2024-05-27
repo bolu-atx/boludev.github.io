@@ -2,7 +2,7 @@ function setTheme(theme) {
     document.getElementById('dark-theme-css').disabled = theme !== 'dark';
     localStorage.setItem('theme', theme);
     // add .dark to all elements with the following classes and tags
-    const classes = ["site-title", "site-nav", "page-link", "site-header-bottom", "site-header", "menu-icon"];
+    const classes = ["site-title", "site-nav", "page-link", "site-header-bottom", "site-header", "menu-icon", "theme-toggle"];
     const tags = ["a", "body"];
 
     if (theme === 'dark') {
