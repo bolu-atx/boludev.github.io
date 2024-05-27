@@ -13,6 +13,10 @@
 .site-header-bottom {
     border: 0;
     border-bottom: 1px solid $grey-color-light;
+
+    &.dark {
+        border-bottom: 1px solid $grey-color-dark;
+    }
 }
 
 .site-title {
@@ -26,6 +30,9 @@
     &,
     &:visited {
         color: $grey-color-dark;
+    }
+    &.dark {
+        color: $grey-color-light;
     }
 }
 .post-comments {
@@ -60,7 +67,12 @@
         &:not(:last-child) {
             margin-right: 20px;
         }
+
+        &.dark {
+            color: $grey-color-light;
+        }
     }
+
 
     @include media-query($on-palm) {
         position: absolute;
@@ -282,4 +294,15 @@
 
 .post-preview-readmore {
     float:right;
+}
+
+.theme-toggle {
+    position: absolute;
+    right: 0;
+    border: 0;
+	padding: 6px;
+    margin-top: 0.6rem;
+    margin-right: 2rem;
+    // round corner
+    border-radius: 20%;
 }
