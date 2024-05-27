@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "What is copiable?"
+title:  "Get the Python GIL play nice with C++"
 date:   2023-09-01 9:06:06 -0700
 tags: python programming
 author: bolu-atx
