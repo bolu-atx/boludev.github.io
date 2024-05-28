@@ -21,6 +21,7 @@
 
 	// Calculations
 	$tile-height: calc(1/map-get($image-grid, aspect)*100%);
+	$tile-height: -webkit-calc(1/map-get($image-grid, aspect)*100%);
 
 	// flickrGal mixins
 	@mixin calculate_tile($numberoftiles){ // Calculates image tile width percentages
