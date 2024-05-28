@@ -47,7 +47,8 @@ ul, ol, dl, figure,
 h1, h2 ,
 %vertical-rhythm 
 {
-    margin-bottom: 2rem;
+    margin-top: 0.3rem;
+    margin-bottom: 1.3rem;
 }
 
 
@@ -147,6 +148,11 @@ pre {
     border: 1px solid $grey-color-light;
     border-radius: 3px;
     background-color: rgb(240, 240, 240);
+
+    &.dark {
+        border-color: $grey-color-dark;
+        background-color: darken($background-color-dark, 5%);
+    }
 }
 
 code {

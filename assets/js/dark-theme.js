@@ -3,7 +3,7 @@ function setTheme(theme) {
     localStorage.setItem('theme', theme);
     // add .dark to all elements with the following classes and tags
     const classes = ["site-title", "site-nav", "page-link", "site-header-bottom", "site-header", "menu-icon", "theme-toggle"];
-    const tags = ["a", "body"];
+    const tags = ["a", "body", "pre"];
 
     if (theme === 'dark') {
         classes.forEach(className => {

@@ -2,5 +2,5 @@
 {{ post.content | strip_html | number_of_words | minus: 180 }}
 {% endcapture %}
 {% unless words contains '-' %}
-/ ⏱ {{ words | plus: 150 | divided_by: 150 | append: ' min' }}
+/ <i class="ti ti-clock"></i> {{ words | plus: 150 | divided_by: 150 | append: ' min' }}
 {% endunless %}
