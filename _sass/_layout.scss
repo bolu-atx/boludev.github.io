@@ -58,7 +58,7 @@
 
 .theme-toggle {
     position: absolute;
-    right: 0;
+    right: 5px;
     border: 0;
     z-index: 1000;
 	padding: 0.5rem;
@@ -92,12 +92,15 @@
     .page-link {
         color: $text-color;
         line-height: $base-line-height;
+        font-weight: 400;
+        font-size: larger;
+        color: $grey-color-dark;
         border-radius: 0.3rem;
         padding: 0.5rem;
 
         // Gaps between nav items, but not on the last one
         &:not(:last-child) {
-            margin-right: 20px;
+            margin-right: 15px;
         }
 
         &.dark {
@@ -105,15 +108,14 @@
         }
 
         i {
-            margin-right: 0.5rem;
+            margin-right: 0.2rem;
         }
     }
 
     @include media-query($on-palm) {
         position: absolute;
         top: 9px;
-        right: calc($spacing-unit / 2);
-        right: -webkit-calc($spacing-unit / 2);
+        right: 1.5rem;
         background-color: $background-color;
         border: 1px solid $grey-color-light;
         border-radius: 5px;
