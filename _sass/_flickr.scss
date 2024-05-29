@@ -8,7 +8,7 @@
 	);
 	// Image Variables
 	$image-grid: (
-		aspect:  calc(4/3), // Set image aspect ratio e.g. 4/3 == 4:3
+		aspect:  1.33, // Set image aspect ratio e.g. 4/3 == 4:3
 		padding: 5px, // Space between images
 		default-cols: 3 // Default number of columns
 	);
