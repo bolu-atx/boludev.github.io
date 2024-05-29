@@ -285,7 +285,7 @@ function build_album(collection, collectionName, collectionID, options) {
 		});
 	}
 	if (options.setHasTitles) {
-		gallery.imageGrid.insertAdjacentHTML('beforeend', '<h3 class="collection-title">'
+		gallery.imageGrid.insertAdjacentHTML('beforeend', '<h3 class="collection-title"><i class="ti ti-photo"></i>'
 			+ collectionName
 			+ '</h3><div class="collection '
 			+ 'collection-'
@@ -374,7 +374,7 @@ function insert_images(id) {
 	var navigateBack = new Element('image');
 	navigateBack.inner.classList.remove('inner');
 	navigateBack.inner.classList.add('navigate-back');
-	navigateBack.inner.innerHTML = '<div>Back</div>';
+	navigateBack.inner.innerHTML = '<div><i class="ti ti-arrow-back-up"></i>Back</div>';
 	navigateBack.inner.addEventListener('click', handle_click);
 	navigateBack.el.appendChild(navigateBack.dummy);
 	navigateBack.el.appendChild(navigateBack.inner);
