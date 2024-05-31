@@ -10,6 +10,7 @@ In refactoring legacy C++ codebases we often have to deal with a lot of function
 
 Modern C++ has introduced a few utilities to help with this pattern. One of them is `std::ref` and `std::reference_wrapper`. In this post, I wanted to talk about these tools and how they can improve the safety and readability of modern C++ code.
 
+<!--more-->
 
 ## Introduction to `std::reference_wrapper` and `std::ref`
 
@@ -143,3 +144,10 @@ int main() {
 ## Conclusion
 
 `std::reference_wrapper` and `std::ref` are useful tools in modern C++ to pass references to functions that take arguments by value. They are particularly useful when you want to make a container of reference types or package arguments in various queues or other containers to functions that take by reference. They are a great way to improve the safety and readability of modern C++ code.
+
+## References
+
+- [std::reference_wrapper](https://en.cppreference.com/w/cpp/utility/functional/reference_wrapper) and [std::ref](https://en.cppreference.com/w/cpp/utility/functional/ref) on cppreference.com
+- [std::apply](https://en.cppreference.com/w/cpp/utility/apply) on cppreference.com
+- [std::reference_wrapper common use cases](https://www.nextptr.com/tutorial/ta1441164581/stdref-and-stdreference_wrapper-common-use-cases)
+- [stack overlfow post on std::reference_wrapper](https://stackoverflow.com/questions/18127469/how-to-correctly-use-stdreference-wrappers)
