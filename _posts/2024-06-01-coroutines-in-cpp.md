@@ -25,6 +25,7 @@ Here's a simple example of a coroutine that generates a sequence of numbers:
 struct generator {
     struct promise_type {
         int current_value;
+
         auto initial_suspend() { return std::suspend_always{}; }
         auto final_suspend() noexcept { return std::suspend_always{}; }
         generator get_return_object() { return generator{this}; }
@@ -35,10 +36,42 @@ struct generator {
         }
     };
 
-    bool move_next() { return true; }
-    int current_value() { return 0; }
-};
+    struct iterator {
+        std::coroutine_handle<promise_type> handle;
 
+        iterator(std::coroutine_handle<promise_type> h) : handle(h) {}
+
+        iterator& operator++() {
+            handle.resume();
+            return *this;
+        }
+
+        int operator*() const {
+            return handle.promise().current_value;
+        }
+
+        bool operator==(const iterator& other) const {
+            return handle == other.handle;
+        }
+
+        bool operator!=(const iterator& other) const {
+            return handle.done();
+        }
+    };
+
+    std::coroutine_handle<promise_type> handle;
+
+    generator(promise_type* p) : handle(std::coroutine_handle<promise_type>::from_promise(*p)) {}
+
+    iterator begin() {
+        handle.resume();
+        return iterator{handle};
+    }
+
+    iterator end() {
+        return iterator{std::coroutine_handle<promise_type>::from_address(nullptr)};
+    }
+};
 
 generator numbers() {
     co_yield 1;
@@ -48,14 +81,13 @@ generator numbers() {
 
 int main() {
     auto gen = numbers();
-    while (gen.move_next()) {
-        std::cout << gen.current_value() << std::endl;
+    for (auto i : gen) {
+        std::cout << i << std::endl;
     }
     return 0;
 }
 
 ```
-
 Compare and contrast this to the Python version:
 
 ```python
