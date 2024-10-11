@@ -1,14 +1,14 @@
 ---
 layout: post
-title:  "coroutines in C++20"
-date:   2024-06-01 15:06:06 -0700
+title: coroutines in C++20
+date: '2024-06-01 15:06:06 -0700'
 tags: cpp coroutines async
 author: bolu-atx
 categories: programming
 ---
-
-Coroutines are a new feature in C++20 that allows you to write asynchronous code in a synchronous manner. It is a way to write code that can be paused and resumed at a later time. In this post, I wanted to talk about coroutines in C++20 and how they can make asynchronous code in networking and file I/O much easier to write and understand.
-
+Coroutines are a new feature in C++20 that allows you to write asynchronous code in a synchronous manner.
+It is a way to write code that can be paused and resumed at a later time.
+In this post, I wanted to talk about coroutines in C++20 and how they can make asynchronous code in networking and file I/O much easier to write and understand.
 
 <!--more-->
 
@@ -88,6 +88,7 @@ int main() {
 }
 
 ```
+
 Compare and contrast this to the Python version:
 
 ```python
@@ -98,3 +99,5 @@ def numbers():
 ```
 
 It begs the question, what the hell? Why is the C++ version so verbose? This is because the C++ coroutines allow for much finer grained control at the expense of user experience.
+
+
